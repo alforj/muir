@@ -1,0 +1,16 @@
+Package: muir
+Type: Package
+Title: Exploring Datasets with Trees
+Version: 0.0.0.9000
+Authors@R: person("Justin", "Alford", , "justin.alford@gmail.com", role = c("aut", "cre"))
+Description: This packages allows users to easily and dynamically explore or document a 
+      dataset using a tree structure.
+URL: https://github.com/alforj/muir
+Depends: R (>= 3.1.3)
+License: MIT + file LICENSE
+LazyData: true
+Imports:
+      DiagrammeR (>= 0.5),
+      dplyr (>= 0.4.1), 
+      htmlwidgets (>= 0.3.2),
+      stringr (>= 0.6.2)
