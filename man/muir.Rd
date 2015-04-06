@@ -4,32 +4,41 @@
 \alias{muir}
 \title{Explore Datasets with Trees}
 \usage{
-muir(data, node.levels, criteria, show.percent = TRUE, percent.digits = 2,
-  show.empty.child = FALSE, ...)
+muir(data, node.levels, level.criteria, tree.dir = "LR",
+  show.percent = TRUE, show.empty.child = FALSE, tree.height = NULL,
+  tree.width = NULL, ...)
 }
 \arguments{
-\item{data}{A data frame to be explored}
+\item{data}{A data frame to be explored using trees}
 
-\item{node.levels}{The columns from data that will be used to construct the tree in the order that
-they should appear in the tree levels}
+\item{node.levels}{The columns from data that will be used to construct the
+tree in the order that they should appear in the tree levels}
 
-\item{criteria}{A data frame consisting of 4 character columns containing a column name (from node.levels),
-an operator or function (e.g., "==",">", "is.na"), a value, and a label}
+\item{level.criteria}{A data frame consisting of 4 character columns containing a
+column name (from node.levels), an operator or function (e.g., "==",">", "is.na"),
+a value, and a label}
 
-\item{show.percent}{Should nodes show the percent of records represented by that node compared to the total
-number of records in data. Defaults to TRUE}
+\item{tree.dir}{Direction of tree graph. Use either "LR" for left-to-right,
+"RL" for right-to left, "TB" for top-to-bottom, or "BT" for bottom-to-top.}
 
-\item{percent.digits}{Remove and put digits in ...}
+\item{show.percent}{Should nodes show the percent of records represented by
+that node compared to the total number of records in data. Defaults to TRUE}
 
-\item{show.empty.child}{Show a balanced tree with children nodes that are all empty or stop expanding
-the tree once there is a parent node that empty. Defaults to FALSE -- don't show empty children nodes}
+\item{show.empty.child}{Show a balanced tree with children nodes that are all
+empty or stop expanding the tree once there is a parent node that empty.
+Defaults to FALSE -- don't show empty children nodes}
 
-\item{...}{TBD OTHER PARAMS}
+\item{tree.height}{Control tree height to zoom in/out on nodes. Defaults to NULL}
+
+\item{tree.width}{Control tree width to zoom in/out on nodes. Defaults to NULL}
+
+\item{...}{Placeholder for future params to support GraphViz attributes}
 }
 \value{
-An object of class \code{htmlwidget} that will print itself as HTML and be saved as tree.html in wd()
+An object of class \code{htmlwidget} that will print itself as HTML
 }
 \description{
-This function allows users to easily and dynamically explore or document a dataset using a tree structure.
+This function allows users to easily and dynamically explore or document a
+dataset using a tree structure.
 }
 
