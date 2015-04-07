@@ -26,7 +26,6 @@
 muir <- function(data, node.levels, level.criteria, tree.dir = "LR", show.percent = TRUE,
                  show.empty.child = FALSE, tree.height = NULL, tree.width = NULL, ...) {
 
-  dfname <<- args()[1]
   # Hack for CRAN R CMD check
   parent <- NULL; rm("parent")
   index <- NULL; rm("index")
