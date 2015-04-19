@@ -7,7 +7,7 @@ Description: This packages allows users to easily and dynamically explore or doc
       dataset using a tree structure.
 URL: https://github.com/alforj/muir
 Depends: R (>= 3.1.2)
-License: GPL>=2.0
+License: GPL (>= 2)
 LazyData: true
 Imports:
       DiagrammeR (>= 0.5),

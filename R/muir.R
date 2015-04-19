@@ -5,33 +5,47 @@
 #' @param data A data frame to be explored using trees
 #' @param node.levels The columns from \code{data} that will be used to construct the
 #'  tree provides as a character vector in the order that they should appear in the tree levels.
-#'  Values can be provided just as "colname", "colname!", "colname+", or "colname!+".
+#'  For each column, the user can indicate whether to generate nodes for all distinct values
+#'  of the column in the df, a specific number of values (i.e., the "Top (n)" values), whether
+#'  or not to aggregate remaining values into a separate "Other" node, or to use user-provided
+#'  filter criteria for the column as provided in the \code{level.criteria} parameter
+#'  Values can be provided such as "colname", "colname:*", "colname:3", "colname:+",
+#'  or "colname:*+". The separator character ":" and the special characters that follow (as
+#'  outlined below) indicate which approach to take for each column.
 #'  \enumerate{
-#'  \item Providing just the column name itself (e.g, "hp") will only return results
+#'  \item Providing just the column name itself (e.g, "hp") will return results
 #'  based on the operators and values provided in the \code{level.criteria} parameter
 #'  for that column name.
-#'  \item Providing the column name ending with an "*" (e.g., "hp*") will return a node for
+#'  \item Providing the column name ending with an ":*" (e.g., "hp:*") will return a node for
 #'  all distinct values for that column up to the limit imposed by the \code{node.limit} value.
-#'  \item Providing the column name ending with with a "+" (e.g., "hp+") will return all the
+#'  If the number of distinct values is greater than the \code{node.limit}, only the top "n"
+#'  values (based on number of occurences) will be returned.
+#'  \item Providing the column name ending with an ":n" (e.g., "hp:3"), where
+#'   \code{n} = a positive integer, will return a node for all distinct values for
+#'   that column up to the limit imposed by the integer provided a \code{n}.
+#'   If the number of distinct values is greater than the value provided in \code{n},
+#'   only the top "n" values (based on number of occurences) will be returned.
+#'  \item Providing the column name ending with with a ":+" (e.g., "hp:+") will return all the
 #'  values provided in the \code{level.criteria} parameter for that column plus an extra node
 #'  titled "Other" for that column that aggregates all the remaining values not included
 #'  in the \code{level.criteria} df for that column.
-#'  \item Providing a column name ending with both symbols (e.g., "hp*+") will return a node for
-#'  all distinct values for that column up to the limit imposed by the \code{node.limit} value
-#'  plus an additional "Other" node aggregating any remaining values beyond the \code{node.limit},
-#'  if applicable. If the number of distinct values is <= the \code{node.limit} then the "Other"
+#'  \item Providing a column name ending with both symbols (e.g., "hp:*+", "hp:3+") will return
+#'   a node for all distinct values for that column up to the limit imposed by either
+#'   the \code{node.limit} or the \code{n} value plus an additional "Other" node aggregating
+#'   any remaining values beyond the \code{node.limit}, if applicable.
+#'   If the number of distinct values is <= the \code{node.limit} or \code{n} then the "Other"
 #'  node will not be created.
 #'  }
-#'  See the node.levels vignette for more details.
+#'  See the muir vignette for more details.
 #' @param level.criteria A data frame consisting of 4 character columns containing a
 #' column name (from \code{node.levels} without any "*" or "+" symbols), an operator or
 #' function (e.g., "==",">", "is.na"), a value, and a corresponding node title for that criteria.
 #' @param node.limit When providing a colum in \code{node.levels} that ends with a "*"
 #' the \code{node.limit} will limit how many distinct values to actually process to prevent
 #' run-away queries and unreadable trees. The limit defaults to 3 (not including an additional
-#' 4th if requesting to provide an "Other" node as well with a "*+" suffix). If the
+#' 4th if requesting to provide an "Other" node as well with a ":*+" suffix). If the
 #' number of distinct values for the column is greater than the \code{node.limit}, the tree
-#' will include the Top "X" values based on count, where "X" = \code{node.limit}. If the
+#' will include the Top "n" values based on count, where "n" = \code{node.limit}. If the
 #' \code{node.limit} is greater than the number of distinct values for the column, it will
 #' be ignored.
 #' @param label.vals Additional values to include in the node provided as a
@@ -55,8 +69,6 @@
 #' as \code{height} param. Defaults to NULL
 #' @param tree.width Control tree width to zoom in/out on nodes. Passed to DiagrammeR
 #' as \code{width} param. Defaults to NULL
-#' @param ... Additional named arguments. E.g., \code{digits} to control precision of
-#' the percent value it \code{show.percent} = TRUE.
 #' @return An object with classes \code{DiagrammeR} and \code{htmlwidget} that will
 #' print itself as HTML.
 #' @import dplyr stringr
@@ -64,18 +76,25 @@
 #' @rdname muir
 
 muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals = NULL, tree.dir = "LR", show.percent = TRUE,
-                 num.precision = 2, show.empty.child = FALSE, tree.height = NULL, tree.width = NULL, ...) {
-
-  dots <- list(...)
+                 num.precision = 2, show.empty.child = FALSE, tree.height = NULL, tree.width = NULL) {
 
   # Hack for CRAN R CMD check
   parent <- NULL; rm("parent")
   index <- NULL; rm("index")
   node <- NULL; rm("node")
+  cnt <- NULL; rm("cnt")
+  colindex <- NULL; rm("colindex")
 
-  #         # validate function parameters
-  #         stopifnot(inherits(data,"data.frame"))
-  #         TBD Add more validation checks on params
+  # validate function parameters
+  stopifnot(inherits(data,"data.frame"))
+  stopifnot(class(node.levels) == "character")
+  stopifnot(node.limit > 0)
+  stopifnot(tree.dir %in% c("LR", "RL", "TB", "BT"))
+
+
+  ## Remove factors from data so there are not filter or summarise errors later
+  i <- sapply(data, is.factor)
+  data[i] <- lapply(data[i], as.character)
 
   ## Parse node.level columns to separate colnames from the requested criteria
   node.criteria <- data.frame(index = 1:length(node.levels),
@@ -84,36 +103,34 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
   colnames(node.criteria) <- c("index", "col", "criteria")
 
   #make sure cols with no node.level criteria are marked as NA (they will be repeated in df)
-  node.criteria$criteria[node.criteria$column == node.criteria$criteria] <- NA
+  node.criteria$criteria[node.criteria$col == node.criteria$criteria] <- NA
   node.levels <- as.vector(unlist(node.criteria$col))
 
+  ## Ensure all node.levels provided exist as columns in the data df
+  stopifnot(sum(unique(node.levels) %in% colnames(data)) == length(unique(node.levels)))
 
-#   node.criteria <- node.levels
-#   node.levels <- str_replace(node.levels, "[+$]", "")
-#   node.levels <- unlist(str_replace(node.levels, "[*$]", ""))
+  ## Check if level.criteria will be used based on node.levels and if so that
+  ## the value provided for level.criteria in in the correct format ad supports
+  ## the columns provided in node.levels
 
-  ## Initialize data frame based on number of levels (data columns) provided
-#   colindex <- dplyr::data_frame(index=1:length(node.levels), col = node.levels,
-#                                 criteria = node.criteria, stringsAsFactors = FALSE)
+    ## Get columns from node.levels that did not request all or 'n' number of values
+    crit.cols <- unique(node.criteria$col[is.na(node.criteria$criteria)|
+                                            node.criteria$criteria == "+"])
 
-  ## Ensure level.criteria has expected number of cols and set names
-  ## TBD - current only works if level.criteria is provided as df. Accepting list as potential enhancement
-  ## TBD need to handle when level.criteria is NULL
-  ## TBD Don't need to check ncols if NULL -- and will break anyway
-  ## TBD if not NULL, need to make sure that all the cols in node.levels that are not (*|n) are included
-  if(!(ncol(level.criteria) == 4)) {
-    stop("The criteria input does not contain the required number of columns.
-         See help(muir) for instructions.")
-  }
+    ## TBD -- make the errors more descriptive to user
+    ## Check level.criteria and stop if invalid
+    if (length(crit.cols) > 0) {
+      stopifnot(!is.null(level.criteria)) # cannot be NULL if there is one or more columns needing it
 
-  colnames(level.criteria) <- c("col", "oper", "val", "title")
+      stopifnot(inherits(level.criteria,"data.frame")) # must be a df
 
-  ## Remove factor levels from level.criteria if present by forcing character
-  #i <- sapply(level.criteria, is.factor)
-  #level.criteria[i] <- lapply(level.criteria[i], as.character)
+      stopifnot(ncol(level.criteria) == 4) # must have 4 cols (col, oper, val, label)
+        colnames(level.criteria) <- c("col", "oper", "val", "title") # if still valid, set names
+        level.criteria[] <- lapply(level.criteria, as.character) # and remove factors
 
-
-  level.criteria <- data.frame(lapply(level.criteria, as.character), stringsAsFactors=FALSE)
+      stopifnot(sum(unique(crit.cols) %in% unique(level.criteria$col)) ==
+                  length(unique(crit.cols))) # make sure cols are defined in level.criteria
+    }
 
   ## Get data values for columns where the user wants nodes for each value and update criteria
   ## to use those values instead of any values passed in via level.criteria. Constrain number
@@ -162,7 +179,6 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
       colcounts$cnt[i] <- colcounts$cnt[i] + 1
     }
   }
- ###TBD make sure rest of DB is populated correctly
 
   numnodes <- 1 + max(cumsum(cumprod(colcounts$cnt)))
 
@@ -198,9 +214,18 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
   if (!is.null(add.labels)) {
     for (l in 1:length(add.labels)) {
       if (nodedf$v_n[1] > 0) {
-      nodedf[, add.labels[l]][1] <- as.character(format(round(s_summarise(data, label.vals[l]),
-                                                 digits = num.precision),
-                                           nsmall = num.precision))
+
+      nodedf[, add.labels[l]][1] <- s_summarise(data, label.vals[l])[[1]]
+
+      ## if value is numeric/double, format to decimals places = num.precision
+      if (class(nodedf[, add.labels[l]][1]) %in% c("numeric", "double")) {
+        nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][1],
+                                                                digits = num.precision),
+                                                          nsmall = num.precision))
+      }
+#         as.character(format(round(s_summarise(data, label.vals[l]),
+#                                                  digits = num.precision),
+#                                            nsmall = num.precision))
       } else {
         nodedf[, add.labels[l]][1] <- NA
       }
@@ -260,7 +285,7 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
           if (leaves[[3]][n] == "" | is.na(leaves[[3]][n])) {
             nodedf$leaf_filter[cur_node] <- ff(leaves[[2]][n], leaves[[1]][n])
           } else {
-            nodedf$leaf_filter[cur_node] <- paste0(leaves[[1]][n], leaves[[2]][n], leaves[[3]][n])
+            nodedf$leaf_filter[cur_node] <- paste0(leaves[[1]][n], leaves[[2]][n], "\"", leaves[[3]][n], "\"")
           }
 
           if (!is.null(pfltr)) {
@@ -277,10 +302,20 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
           if (!is.null(add.labels)) {
             for (l in 1:length(add.labels)) {
               if (nodedf$v_n[cur_node] > 0) {
-                nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
-                                                                              label.vals[l]),
-                                                                  digits = num.precision),
-                                                            nsmall = num.precision))
+
+                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals[l])[[1]]
+
+                ## if value is numeric/double, format to decimals places = num.precision
+                if (class(nodedf[, add.labels[l]][cur_node]) %in% c("numeric", "double")) {
+                  nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][cur_node],
+                                                                          digits = num.precision),
+                                                                    nsmall = num.precision))
+                }
+
+#                 nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
+#                                                                               label.vals[l]),
+#                                                                   digits = num.precision),
+#                                                             nsmall = num.precision))
               } else {
                 nodedf[, add.labels[l]][cur_node] <- NA
               }
@@ -317,10 +352,19 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
           if (!is.null(add.labels)) {
             for (l in 1:length(add.labels)) {
               if (nodedf$v_n[cur_node] > 0) {
-                nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
-                                                                              label.vals[l]),
-                                                                  digits = num.precision),
-                                                            nsmall = num.precision))
+
+                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals[l])[[1]]
+
+                ## if value is numeric/double, format to decimals places = num.precision
+                if (class(nodedf[, add.labels[l]][cur_node]) %in% c("numeric", "double")) {
+                  nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][cur_node],
+                                                                          digits = num.precision),
+                                                                    nsmall = num.precision))
+                }
+#                 nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
+#                                                                               label.vals[l]),
+#                                                                   digits = num.precision),
+#                                                             nsmall = num.precision))
               } else {
                 nodedf[, add.labels[l]][cur_node] <- NA
               }
@@ -345,7 +389,7 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
   #return(nodedf)
   tree <- build_tree(nodedf, tree.dir, tree.height, tree.width)
 
-  # return and render tree
+  # return/render generated tree
   tree
 
 }
