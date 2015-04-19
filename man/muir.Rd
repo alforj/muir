@@ -4,38 +4,81 @@
 \alias{muir}
 \title{Explore Datasets with Trees}
 \usage{
-muir(data, node.levels, level.criteria, tree.dir = "LR",
-  show.percent = TRUE, show.empty.child = FALSE, tree.height = NULL,
-  tree.width = NULL, ...)
+muir(data, node.levels, level.criteria, node.limit = 3, label.vals = NULL,
+  tree.dir = "LR", show.percent = TRUE, num.precision = 2,
+  show.empty.child = FALSE, tree.height = NULL, tree.width = NULL, ...)
 }
 \arguments{
 \item{data}{A data frame to be explored using trees}
 
-\item{node.levels}{The columns from data that will be used to construct the
-tree in the order that they should appear in the tree levels}
+\item{node.levels}{The columns from \code{data} that will be used to construct the
+tree provides as a character vector in the order that they should appear in the tree levels.
+Values can be provided just as "colname", "colname!", "colname+", or "colname!+".
+\enumerate{
+\item Providing just the column name itself (e.g, "hp") will only return results
+based on the operators and values provided in the \code{level.criteria} parameter
+for that column name.
+\item Providing the column name ending with an "*" (e.g., "hp*") will return a node for
+all distinct values for that column up to the limit imposed by the \code{node.limit} value.
+\item Providing the column name ending with with a "+" (e.g., "hp+") will return all the
+values provided in the \code{level.criteria} parameter for that column plus an extra node
+titled "Other" for that column that aggregates all the remaining values not included
+in the \code{level.criteria} df for that column.
+\item Providing a column name ending with both symbols (e.g., "hp*+") will return a node for
+all distinct values for that column up to the limit imposed by the \code{node.limit} value
+plus an additional "Other" node aggregating any remaining values beyond the \code{node.limit},
+if applicable. If the number of distinct values is <= the \code{node.limit} then the "Other"
+node will not be created.
+}
+See the node.levels vignette for more details.}
 
 \item{level.criteria}{A data frame consisting of 4 character columns containing a
-column name (from node.levels), an operator or function (e.g., "==",">", "is.na"),
-a value, and a label}
+column name (from \code{node.levels} without any "*" or "+" symbols), an operator or
+function (e.g., "==",">", "is.na"), a value, and a corresponding node title for that criteria.}
 
-\item{tree.dir}{Direction of tree graph. Use either "LR" for left-to-right,
-"RL" for right-to left, "TB" for top-to-bottom, or "BT" for bottom-to-top.}
+\item{node.limit}{When providing a colum in \code{node.levels} that ends with a "*"
+the \code{node.limit} will limit how many distinct values to actually process to prevent
+run-away queries and unreadable trees. The limit defaults to 3 (not including an additional
+4th if requesting to provide an "Other" node as well with a "*+" suffix). If the
+number of distinct values for the column is greater than the \code{node.limit}, the tree
+will include the Top "X" values based on count, where "X" = \code{node.limit}. If the
+\code{node.limit} is greater than the number of distinct values for the column, it will
+be ignored.}
+
+\item{label.vals}{Additional values to include in the node provided as a
+character vector. The values must take the form of dplyr \code{summarise} functions
+(as characters) and include the columns the functions should be run against (e.g.,
+"min(hp)", "mean(hp)", etc.)}
+
+\item{tree.dir}{The direction the tree graph should be rendered. Defaults to "LR"
+\enumerate{
+\item Use "LR" for left-to-right
+\item Use "RL" for right-to left
+\item Use "TB" for top-to-bottom
+\item User "BT" for bottom-to-top
+}}
 
 \item{show.percent}{Should nodes show the percent of records represented by
-that node compared to the total number of records in data. Defaults to TRUE}
+that node compared to the total number of records in \code{data.} Defaults to TRUE}
+
+\item{num.precision}{Number of digits to print numeric label values out to}
 
 \item{show.empty.child}{Show a balanced tree with children nodes that are all
-empty or stop expanding the tree once there is a parent node that empty.
+empty or stop expanding the tree once there is a parent node that is empty.
 Defaults to FALSE -- don't show empty children nodes}
 
-\item{tree.height}{Control tree height to zoom in/out on nodes. Defaults to NULL}
+\item{tree.height}{Control tree height to zoom in/out on nodes. Passed to DiagrammeR
+as \code{height} param. Defaults to NULL}
 
-\item{tree.width}{Control tree width to zoom in/out on nodes. Defaults to NULL}
+\item{tree.width}{Control tree width to zoom in/out on nodes. Passed to DiagrammeR
+as \code{width} param. Defaults to NULL}
 
-\item{...}{Placeholder for future params to support GraphViz attributes}
+\item{...}{Additional named arguments. E.g., \code{digits} to control precision of
+the percent value it \code{show.percent} = TRUE.}
 }
 \value{
-An object of class \code{htmlwidget} that will print itself as HTML
+An object with classes \code{DiagrammeR} and \code{htmlwidget} that will
+print itself as HTML.
 }
 \description{
 This function allows users to easily and dynamically explore or document a

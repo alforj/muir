@@ -28,7 +28,7 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
   headnode <- filter(data, parent == "None")
   if (nrow(headnode) != 1) stop("There is either no head node or more than one head node.")
 
-  nodelist <- paste0(nodelist, headnode$node, "(", headnode$label, "<br/>", sep = "")
+  nodelist <- paste0(nodelist, headnode$node, "(", headnode$title, "<br/>", sep = "")
   for (n in 1:length(nodevals)) {
 
     nodelist <- paste0(nodelist, paste0(stringr::str_replace(nodevals[n], "v_", ""), ": "),
@@ -46,7 +46,7 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
   edge.num <- 0
   for (i in 1:nrow(nodes)) {
 
-    if(is.na(nodes$label[i])) {
+    if(is.na(nodes$title[i])) {
 
       nodelist <- paste0(nodelist, nodes$parent[i], "-->", nodes$node[i],
                          "( );", sep = "")
@@ -68,7 +68,7 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
     } else {
 
       nodelist <- paste0(nodelist, nodes$parent[i], "-->", nodes$node[i],
-                         "(", nodes$label[i], "<br/>", sep = "")
+                         "(", nodes$title[i], "<br/>", sep = "")
 
 
       for (n in 1:length(nodevals)) {
