@@ -94,6 +94,10 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   colindex <- NULL; rm("colindex")
 
   # validate function parameters
+  if(inherits(data, "data.table")) {
+    data <- as.data.frame(data) #data.tables are not currently supported
+  }
+
   if(!inherits(data,"data.frame")) {
     stop("data param must be a data.frame")
   }
