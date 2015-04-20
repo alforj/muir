@@ -3,51 +3,58 @@
 #' This function allows users to easily and dynamically explore or document a
 #' dataset using a tree structure.
 #' @param data A data frame to be explored using trees
-#' @param node.levels The columns from \code{data} that will be used to construct the
-#'  tree provides as a character vector in the order that they should appear in the tree levels.
-#'  For each column, the user can indicate whether to generate nodes for all distinct values
-#'  of the column in the df, a specific number of values (i.e., the "Top (n)" values), whether
-#'  or not to aggregate remaining values into a separate "Other" node, or to use user-provided
-#'  filter criteria for the column as provided in the \code{level.criteria} parameter
-#'  Values can be provided such as "colname", "colname:*", "colname:3", "colname:+",
-#'  or "colname:*+". The separator character ":" and the special characters that follow (as
-#'  outlined below) indicate which approach to take for each column.
-#'  \enumerate{
+#' @param node.levels A character vector of columns from \code{data} that will be used to
+#' construct the tree that are provided in the order that they should appear in the tree levels.
+#'
+#'  For each column, the user can add a suffix to the columnn name to indicate whether to generate
+#'  nodes for all distinct values of the column in the date.frame, a specific number of values
+#'  (i.e., the "Top (n)" values), and whether or not to aggregate remaining values into a separate
+#'  "Other" node, or to use user-provided filter criteria for the column as provided in
+#'  the \code{level.criteria} parameter.
+#'
+#'  Values can be provided as "colname", "colname:*", "colname:3", "colname:+",
+#'  or "colname:*+". The separator character ":" and the special characters in the suffix that
+#'  follow (as outlined below) indicate which approach to take for each column.
+#'  \itemize{
 #'  \item Providing just the column name itself (e.g, "hp") will return results
 #'  based on the operators and values provided in the \code{level.criteria} parameter
-#'  for that column name.
-#'  \item Providing the column name ending with an ":*" (e.g., "hp:*") will return a node for
+#'  for that column name. See \code{level.criteria} for more details.
+#'  \item Providing the column name with an ":*"  suffix (e.g., "hp:*") will return a node for
 #'  all distinct values for that column up to the limit imposed by the \code{node.limit} value.
 #'  If the number of distinct values is greater than the \code{node.limit}, only the top "n"
 #'  values (based on number of occurences) will be returned.
-#'  \item Providing the column name ending with an ":n" (e.g., "hp:3"), where
+#'  \item Providing the column name with an ":\code{n}" suffix (e.g., "hp:3"), where
 #'   \code{n} = a positive integer, will return a node for all distinct values for
-#'   that column up to the limit imposed by the integer provided a \code{n}.
+#'   that column up to the limit imposed by the integer provided in \code{n}.
 #'   If the number of distinct values is greater than the value provided in \code{n},
 #'   only the top "n" values (based on number of occurences) will be returned.
-#'  \item Providing the column name ending with with a ":+" (e.g., "hp:+") will return all the
+#'  \item Providing the column name ending with an ":+" suffix (e.g., "hp:+") will return all the
 #'  values provided in the \code{level.criteria} parameter for that column plus an extra node
 #'  titled "Other" for that column that aggregates all the remaining values not included
-#'  in the \code{level.criteria} df for that column.
-#'  \item Providing a column name ending with both symbols (e.g., "hp:*+", "hp:3+") will return
-#'   a node for all distinct values for that column up to the limit imposed by either
+#'  in the filter criteria provided in \code{level.criteria} for that column.
+#'  \item Providing a column name ending with both symbols (e.g., "hp:*+", "hp:3+") in the suffix
+#'   will return a node for all distinct values for that column up to the limit imposed by either
 #'   the \code{node.limit} or the \code{n} value plus an additional "Other" node aggregating
-#'   any remaining values beyond the \code{node.limit}, if applicable.
+#'   any remaining values beyond the \code{node.limit} or \code{n}, if applicable.
 #'   If the number of distinct values is <= the \code{node.limit} or \code{n} then the "Other"
 #'  node will not be created.
 #'  }
-#'  See the muir vignette for more details.
-#' @param level.criteria A data frame consisting of 4 character columns containing a
-#' column name (from \code{node.levels} without any "*" or "+" symbols), an operator or
-#' function (e.g., "==",">", "is.na"), a value, and a corresponding node title for that criteria.
-#' @param node.limit When providing a colum in \code{node.levels} that ends with a "*"
+#' @param node.limit When providing a column in \code{node.levels} with an ":*" suffix,
 #' the \code{node.limit} will limit how many distinct values to actually process to prevent
 #' run-away queries and unreadable trees. The limit defaults to 3 (not including an additional
 #' 4th if requesting to provide an "Other" node as well with a ":*+" suffix). If the
 #' number of distinct values for the column is greater than the \code{node.limit}, the tree
-#' will include the Top "n" values based on count, where "n" = \code{node.limit}. If the
+#' will include the Top "X" values based on count, where "X" = \code{node.limit}. If the
 #' \code{node.limit} is greater than the number of distinct values for the column, it will
 #' be ignored.
+#' @param level.criteria A data frame consisting of 4 character columns containing
+#' column names (matching -- without suffixes -- the columns in \code{node.levels} that will
+#' use the criteria in \code{level.criteria} to determine the filters used for each node),
+#' an operator or boolean function (e.g., "==",">", "is.na", "is.null"), a value,
+#' and a corresponding node title for the node displaying that criteria.
+#'
+#' E.g.,"wt, ">=", "4000", "Heavy Cars"
+#'
 #' @param label.vals Additional values to include in the node provided as a
 #' character vector. The values must take the form of dplyr \code{summarise} functions
 #' (as characters) and include the columns the functions should be run against (e.g.,
@@ -75,8 +82,9 @@
 #' @export
 #' @rdname muir
 
-muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals = NULL, tree.dir = "LR", show.percent = TRUE,
-                 num.precision = 2, show.empty.child = FALSE, tree.height = NULL, tree.width = NULL) {
+muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label.vals = NULL,
+                 tree.dir = "LR", show.percent = TRUE, num.precision = 2,
+                 show.empty.child = FALSE, tree.height = NULL, tree.width = NULL) {
 
   # Hack for CRAN R CMD check
   parent <- NULL; rm("parent")
@@ -86,10 +94,17 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
   colindex <- NULL; rm("colindex")
 
   # validate function parameters
-  stopifnot(inherits(data,"data.frame"))
-  stopifnot(class(node.levels) == "character")
-  stopifnot(node.limit > 0)
-  stopifnot(tree.dir %in% c("LR", "RL", "TB", "BT"))
+  if(!inherits(data,"data.frame")) {
+    stop("data param must be a data.frame")
+  }
+
+  if(class(node.levels) != "character") {
+    stop("node.levels must be a vector of type character. Provide the column names surrounded by quotes.")
+  }
+
+  if(!(tree.dir %in% c("LR", "RL", "TB", "BT"))) {
+    stop("tree.dir must be either 'LR', 'RL', 'TB', or 'BT'.")
+  }
 
 
   ## Remove factors from data so there are not filter or summarise errors later
@@ -107,7 +122,9 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
   node.levels <- as.vector(unlist(node.criteria$col))
 
   ## Ensure all node.levels provided exist as columns in the data df
-  stopifnot(sum(unique(node.levels) %in% colnames(data)) == length(unique(node.levels)))
+  if(sum(unique(node.levels) %in% colnames(data)) != length(unique(node.levels))) {
+    stop("All of the columns provided in node.levels do not appear in the data data.frame.")
+  }
 
   ## Check if level.criteria will be used based on node.levels and if so that
   ## the value provided for level.criteria in in the correct format ad supports
@@ -120,16 +137,37 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
     ## TBD -- make the errors more descriptive to user
     ## Check level.criteria and stop if invalid
     if (length(crit.cols) > 0) {
-      stopifnot(!is.null(level.criteria)) # cannot be NULL if there is one or more columns needing it
 
-      stopifnot(inherits(level.criteria,"data.frame")) # must be a df
+      # validate the level.critera param
+      validate.level.criteria(level.criteria) # will stop if error is found
 
-      stopifnot(ncol(level.criteria) == 4) # must have 4 cols (col, oper, val, label)
-        colnames(level.criteria) <- c("col", "oper", "val", "title") # if still valid, set names
+#       if(is.null(level.criteria))
+#         # cannot be NULL if there is one or more columns needing it
+#         stop(paste0("level.criteria cannot be NULL. There are ",length(crit.cols),
+#                     " that require level.criteria: ", paste(crit.cols, collapse = ", ")))
+#       }
+#
+#       if(!inherits(level.criteria,"data.frame")) {
+#         # must be a df
+#         stop("level.criteria must be a data.frame")
+#       }
+#
+#       if(ncol(level.criteria) != 4) {
+#         # must have 4 cols (col, oper, val, label)
+#         stop("The level.criteria data.frame requires 4 columns that contain: ",
+#              "the column name, an operator, a value, and a node title for that criteria condition")
+#       }
+
+      ## if the level.criteria param passed all the checks above, continue processing
+        colnames(level.criteria) <- c("col", "oper", "val", "title") # set names
         level.criteria[] <- lapply(level.criteria, as.character) # and remove factors
 
-      stopifnot(sum(unique(crit.cols) %in% unique(level.criteria$col)) ==
-                  length(unique(crit.cols))) # make sure cols are defined in level.criteria
+      if(sum(unique(crit.cols) %in% unique(level.criteria$col)) !=
+                  length(unique(crit.cols))) {
+        # all column names without ":*" or a ":{digit}" are not present in the level.criteria df
+        stop("The level.criteria data.frame is missing values for the following columns: ",
+             paste(setdiff(unique(crit.cols), unique(level.criteria$col)), collapse = ", "))
+      }
     }
 
   ## Get data values for columns where the user wants nodes for each value and update criteria
@@ -143,8 +181,17 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
       col.values <- dplyr::arrange(col.values, desc(cnt))
 
       if (grepl("\\*", node.criteria$criteria[i])) {
+
+        # validate node.limit is valid
+        if(!is.numeric(node.limit) | node.limit <= 0) {
+          stop("node.limit must be a positive integer.")
+        }
+        # get the top n values based on the node.limit value
         col.values <- dplyr::slice(col.values, 1:node.limit)
+
       } else {
+
+        # get the top n values based on the param passed with the invidivual column
         col.values <- dplyr::slice(col.values, 1:str_extract(node.criteria$criteria[i], "\\d"))
       }
 
@@ -157,12 +204,16 @@ muir <- function(data, node.levels, level.criteria, node.limit = 3, label.vals =
                                                 as.character(col.values)),
                                  stringsAsFactors = FALSE)
 
-      ## TBD need to handle when level.criteria starts as NULL
-      level.criteria <- filter(level.criteria, col != node.criteria$col[i])
+      ## update/instantiate level.criteria with the node cols and values based on the top n values
+      if(!is.null(level.criteria)) {
+        # only filter if the current level.criteria isn't NULL and passes validation
+        validate.level.criteria(level.criteria) # will stop if error is found
+        level.criteria <- dplyr::filter(level.criteria, col != node.criteria$col[i])
+      }
+
       level.criteria <- dplyr::bind_rows(level.criteria, new.criteria)
     }
   }
-
 
   colcounts <- dplyr::group_by(level.criteria, col)
   colcounts <- dplyr::summarise(colcounts, cnt = n())

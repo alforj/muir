@@ -4,60 +4,67 @@
 \alias{muir}
 \title{Explore Datasets with Trees}
 \usage{
-muir(data, node.levels, level.criteria, node.limit = 3, label.vals = NULL,
-  tree.dir = "LR", show.percent = TRUE, num.precision = 2,
-  show.empty.child = FALSE, tree.height = NULL, tree.width = NULL)
+muir(data, node.levels, node.limit = 3, level.criteria = NULL,
+  label.vals = NULL, tree.dir = "LR", show.percent = TRUE,
+  num.precision = 2, show.empty.child = FALSE, tree.height = NULL,
+  tree.width = NULL)
 }
 \arguments{
 \item{data}{A data frame to be explored using trees}
 
-\item{node.levels}{The columns from \code{data} that will be used to construct the
-tree provides as a character vector in the order that they should appear in the tree levels.
-For each column, the user can indicate whether to generate nodes for all distinct values
-of the column in the df, a specific number of values (i.e., the "Top (n)" values), whether
-or not to aggregate remaining values into a separate "Other" node, or to use user-provided
-filter criteria for the column as provided in the \code{level.criteria} parameter
-Values can be provided such as "colname", "colname:*", "colname:3", "colname:+",
-or "colname:*+". The separator character ":" and the special characters that follow (as
-outlined below) indicate which approach to take for each column.
-\enumerate{
-\item Providing just the column name itself (e.g, "hp") will return results
-based on the operators and values provided in the \code{level.criteria} parameter
-for that column name.
-\item Providing the column name ending with an ":*" (e.g., "hp:*") will return a node for
-all distinct values for that column up to the limit imposed by the \code{node.limit} value.
-If the number of distinct values is greater than the \code{node.limit}, only the top "n"
-values (based on number of occurences) will be returned.
-\item Providing the column name ending with an ":n" (e.g., "hp:3"), where
- \code{n} = a positive integer, will return a node for all distinct values for
- that column up to the limit imposed by the integer provided a \code{n}.
- If the number of distinct values is greater than the value provided in \code{n},
- only the top "n" values (based on number of occurences) will be returned.
-\item Providing the column name ending with with a ":+" (e.g., "hp:+") will return all the
-values provided in the \code{level.criteria} parameter for that column plus an extra node
-titled "Other" for that column that aggregates all the remaining values not included
-in the \code{level.criteria} df for that column.
-\item Providing a column name ending with both symbols (e.g., "hp:*+", "hp:3+") will return
- a node for all distinct values for that column up to the limit imposed by either
- the \code{node.limit} or the \code{n} value plus an additional "Other" node aggregating
- any remaining values beyond the \code{node.limit}, if applicable.
- If the number of distinct values is <= the \code{node.limit} or \code{n} then the "Other"
-node will not be created.
-}
-See the muir vignette for more details.}
+\item{node.levels}{A character vector of columns from \code{data} that will be used to
+construct the tree that are provided in the order that they should appear in the tree levels.
 
-\item{level.criteria}{A data frame consisting of 4 character columns containing a
-column name (from \code{node.levels} without any "*" or "+" symbols), an operator or
-function (e.g., "==",">", "is.na"), a value, and a corresponding node title for that criteria.}
+ For each column, the user can add a suffix to the columnn name to indicate whether to generate
+ nodes for all distinct values of the column in the date.frame, a specific number of values
+ (i.e., the "Top (n)" values), and whether or not to aggregate remaining values into a separate
+ "Other" node, or to use user-provided filter criteria for the column as provided in
+ the \code{level.criteria} parameter.
 
-\item{node.limit}{When providing a colum in \code{node.levels} that ends with a "*"
+ Values can be provided as "colname", "colname:*", "colname:3", "colname:+",
+ or "colname:*+". The separator character ":" and the special characters in the suffix that
+ follow (as outlined below) indicate which approach to take for each column.
+ \itemize{
+ \item Providing just the column name itself (e.g, "hp") will return results
+ based on the operators and values provided in the \code{level.criteria} parameter
+ for that column name. See \code{level.criteria} for more details.
+ \item Providing the column name with an ":*"  suffix (e.g., "hp:*") will return a node for
+ all distinct values for that column up to the limit imposed by the \code{node.limit} value.
+ If the number of distinct values is greater than the \code{node.limit}, only the top "n"
+ values (based on number of occurences) will be returned.
+ \item Providing the column name with an ":\code{n}" suffix (e.g., "hp:3"), where
+  \code{n} = a positive integer, will return a node for all distinct values for
+  that column up to the limit imposed by the integer provided in \code{n}.
+  If the number of distinct values is greater than the value provided in \code{n},
+  only the top "n" values (based on number of occurences) will be returned.
+ \item Providing the column name ending with an ":+" suffix (e.g., "hp:+") will return all the
+ values provided in the \code{level.criteria} parameter for that column plus an extra node
+ titled "Other" for that column that aggregates all the remaining values not included
+ in the filter criteria provided in \code{level.criteria} for that column.
+ \item Providing a column name ending with both symbols (e.g., "hp:*+", "hp:3+") in the suffix
+  will return a node for all distinct values for that column up to the limit imposed by either
+  the \code{node.limit} or the \code{n} value plus an additional "Other" node aggregating
+  any remaining values beyond the \code{node.limit} or \code{n}, if applicable.
+  If the number of distinct values is <= the \code{node.limit} or \code{n} then the "Other"
+ node will not be created.
+ }}
+
+\item{node.limit}{When providing a column in \code{node.levels} with an ":*" suffix,
 the \code{node.limit} will limit how many distinct values to actually process to prevent
 run-away queries and unreadable trees. The limit defaults to 3 (not including an additional
 4th if requesting to provide an "Other" node as well with a ":*+" suffix). If the
 number of distinct values for the column is greater than the \code{node.limit}, the tree
-will include the Top "n" values based on count, where "n" = \code{node.limit}. If the
+will include the Top "X" values based on count, where "X" = \code{node.limit}. If the
 \code{node.limit} is greater than the number of distinct values for the column, it will
 be ignored.}
+
+\item{level.criteria}{A data frame consisting of 4 character columns containing
+column names (matching -- without suffixes -- the columns in \code{node.levels} that will
+use the criteria in \code{level.criteria} to determine the filters used for each node),
+an operator or boolean function (e.g., "==",">", "is.na", "is.null"), a value,
+and a corresponding node title for the node displaying that criteria.
+
+E.g.,"wt, ">=", "4000", "Heavy Cars"}
 
 \item{label.vals}{Additional values to include in the node provided as a
 character vector. The values must take the form of dplyr \code{summarise} functions
