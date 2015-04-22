@@ -6,8 +6,8 @@
 \usage{
 muir(data, node.levels, node.limit = 3, level.criteria = NULL,
   label.vals = NULL, tree.dir = "LR", show.percent = TRUE,
-  num.precision = 2, show.empty.child = FALSE, tree.height = NULL,
-  tree.width = NULL)
+  num.precision = 2, show.empty.child = FALSE, tree.height = -1,
+  tree.width = -1)
 }
 \arguments{
 \item{data}{A data frame to be explored using trees}
@@ -19,7 +19,9 @@ construct the tree that are provided in the order that they should appear in the
  nodes for all distinct values of the column in the date.frame, a specific number of values
  (i.e., the "Top (n)" values), and whether or not to aggregate remaining values into a separate
  "Other" node, or to use user-provided filter criteria for the column as provided in
- the \code{level.criteria} parameter.
+ the \code{level.criteria} parameter. This does mean that the column names cannot have a ":"
+ and must be replaced in the data.frame before being passed in to \code{muir} as
+ the \code{data} param.
 
  Values can be provided as "colname", "colname:*", "colname:3", "colname:+",
  or "colname:*+". The separator character ":" and the special characters in the suffix that
@@ -69,7 +71,13 @@ E.g.,"wt, ">=", "4000", "Heavy Cars"}
 \item{label.vals}{Additional values to include in the node provided as a
 character vector. The values must take the form of dplyr \code{summarise} functions
 (as characters) and include the columns the functions should be run against (e.g.,
-"min(hp)", "mean(hp)", etc.)}
+"min(hp)", "mean(hp)", etc.). If no custom suffix is added, the summary function itself
+will be used as the label. Similar to \code{node.levels} a custom suffix can be added
+using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP"). In this example,
+the label printed in the node will be "Avg HP:", otherwise it would be mean_hp (note
+that the parens "(" and ")" are removed to be rendered in HTML without error). As with
+\code{node.levels}, the column name itself cannot have a ":" and must be replaced in
+the data.frame before being passed in to \code{muir} as the \code{data} param.}
 
 \item{tree.dir}{The direction the tree graph should be rendered. Defaults to "LR"
 \enumerate{
@@ -89,17 +97,80 @@ empty or stop expanding the tree once there is a parent node that is empty.
 Defaults to FALSE -- don't show empty children nodes}
 
 \item{tree.height}{Control tree height to zoom in/out on nodes. Passed to DiagrammeR
-as \code{height} param. Defaults to NULL}
+as \code{height} param. Defaults to -1, which appears to optimize the tree size
+for viewing (still researching why exactly that works! :-))}
 
 \item{tree.width}{Control tree width to zoom in/out on nodes. Passed to DiagrammeR
-as \code{width} param. Defaults to NULL}
+as \code{width} param. Defaults to -1, which appears to best optimize the tree size
+for viewing (still researching why exactly that works! :-))}
 }
 \value{
-An object with classes \code{DiagrammeR} and \code{htmlwidget} that will
-print itself as HTML.
+An object of class \code{htmlwidget} (via DiagrammeR) that will
+intelligently print itself into HTML in a variety of contexts
+including the R console, within R Markdown documents,
+and within Shiny output bindings.
+#'
 }
 \description{
 This function allows users to easily and dynamically explore or document a
-dataset using a tree structure.
+data.frame using a tree data structure. Columns of interest in the data.frame can
+be provided to the function, as well as critieria for how they should be represented
+in discrete nodes, to generate a data tree representing those columns and filters.
+}
+\examples{
+\dontrun{
+# Load in the 'mtcars' dataset
+data(mtcars)
+
+# Basic exploration - show all values
+muir(data = mtcars, node.levels = c("cyl:*", "carb:*"))
+
+# Basic exploration - show all values overriding default node.limit
+muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), node.limit = 5)
+
+# Show all values overriding default node.limit for each column
+muir(data = mtcars, node.levels = c("cyl:2", "carb:5"))
+
+# Show all values overriding default node.limit for each column
+# and aggregating all distinct values above the node.limit into a
+# separate "Other" column to collect remaining values
+# Top 2 occurring 'carb' values will be returned in nodes, remaining
+# values will be aggregated into the "Other" node at that tree level
+muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"))
+
+# Add additional calculations to each node output (dplyr::summarise functions)
+muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+label.vals = c("min(wt)", "max(wt)"))
+
+# Make label values more reader-friendly
+muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+
+# Instead of just returning top counts for columns provide in \\code{node.levels},
+# provide custom filter criteria and custom node titles in \\code{label.vals}
+# (criteria could also be read in from a csv file as a data.frame)
+criteria <- data.frame(col = c("cyl", "cyl", "carb"),
+oper = c("<", ">=", "=="),
+val = c(4, 4, 2),
+title = c("Less Than 4 Cylinders", "4 or More Cylinders", "2 Carburetors"))
+
+muir(data = mtcars, node.levels = c("cyl", "carb"),
+level.criteria = criteria,
+label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+
+# Use same criteria but show all other values for the column where NOT
+EQUAL to the combination of the filters provided for that column (e.g., for cyl
+where !(cyl < 4 | cyl >= 4) in an "Other" node
+muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+level.criteria = criteria,
+label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+
+# Show empty child nodes (balanced tree)
+muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+level.criteria = criteria,
+label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
+show.empty.child = TRUE)
+
+}
 }
 

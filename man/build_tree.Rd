@@ -17,8 +17,10 @@ build_tree(data, tree.dir = "LR", tree.height = NULL, tree.width = NULL)
 \item{tree.width}{Control tree width to zoom in/out on nodes. Defaults to NULL}
 }
 \value{
-An object of class \code{htmlwidget} that will print itself as HTML and
-be saved as tree.html in wd()
+An object of class \code{htmlwidget} (via DiagrammeR)that will
+intelligently print itself into HTML in a variety of contexts
+including the R console, within R Markdown documents,
+and within Shiny output bindings.
 }
 \description{
 This function allows users to easily and dynamically explore or document a

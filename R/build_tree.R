@@ -7,10 +7,11 @@
 #' "RL" for right-to left, "TB" for top-to-bottom, or "BT" for bottom-to-top.
 #' @param tree.height Control tree height to zoom in/out on nodes. Defaults to NULL
 #' @param tree.width Control tree width to zoom in/out on nodes. Defaults to NULL
-#' @return An object of class \code{htmlwidget} that will print itself as HTML and
-#' be saved as tree.html in wd()
+#' @return An object of class \code{htmlwidget} (via DiagrammeR)that will
+#' intelligently print itself into HTML in a variety of contexts
+#' including the R console, within R Markdown documents,
+#' and within Shiny output bindings.
 #' @import dplyr stringr DiagrammeR
-#' @rdname buiid_tree
 build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = NULL) {
 
   # Hack for CRAN R CMD check
@@ -18,26 +19,29 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
   starts_with <- NULL; rm("starts_with")
   parent <- NULL; rm("parent")
 
-
+  # establish start of string to provide to DiagrammeR().
+  # Currently based on use of mermaid and not grViz
   nodelist <- paste0("graph ", tree.dir, ";")
-  nodevals <- names(select(data, starts_with("v_")))
+
+  # node labels pulled from data based on starting with "nl_"
+  node.labels <- names(select(data, starts_with("nl_")))
 
 
-  ## Build parent (head) node
+  ## Build parent (head) node (assumed mermaid)
 
   headnode <- filter(data, parent == "None")
   if (nrow(headnode) != 1) stop("There is either no head node or more than one head node.")
 
   nodelist <- paste0(nodelist, headnode$node, "(", headnode$title, "<br/>", sep = "")
-  for (n in 1:length(nodevals)) {
+  for (n in 1:length(node.labels)) {
 
-    nodelist <- paste0(nodelist, paste0(stringr::str_replace(nodevals[n], "v_", ""), ": "),
-                       headnode[,nodevals[n]], "<br/>", sep = "")
+    nodelist <- paste0(nodelist, paste0(stringr::str_replace(node.labels[n], "nl_", ""), ": "),
+                       headnode[,node.labels[n]], "<br/>", sep = "")
   }
 
   nodelist <- paste0(nodelist, ");", sep = "")
 
-  ## Build non-Zero leaf nodes (for when user does not children of parents with no values)
+  ## Build non-Zero leaf nodes
   nodes <- filter(data, parent != "None")
 
   ## if no data, spit back an emtpy diagram
@@ -71,10 +75,10 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
                          "(", nodes$title[i], "<br/>", sep = "")
 
 
-      for (n in 1:length(nodevals)) {
+      for (n in 1:length(node.labels)) {
 
-        nodelist <- paste0(nodelist, paste0(stringr::str_replace(nodevals[n], "v_", ""), ": "),
-                           nodes[i,nodevals[n]], "<br/>", sep = "")
+        nodelist <- paste0(nodelist, paste0(stringr::str_replace(node.labels[n], "nl_", ""), ": "),
+                           nodes[i,node.labels[n]], "<br/>", sep = "")
       }
 
 
@@ -85,11 +89,13 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
 
   }
 
-
+  # set default node colors and fill
+  # TBD - make dynamic/user-driven
   nodelist <- paste0(nodelist, "linkStyle default stroke-width:2px, fill:none;")
   nodelist <- paste0(nodelist, "classDef default fill:white,stroke:#333,stroke-width:2px;")
   nodelist <- paste0(nodelist, "classDef invisible fill:white,stroke:white,stroke-width:0px;")
 
+  # Hide nodes without a title (muir() will set titles to NA if show.empty.child = FALSE)
   if(exists("hide.nodes")) {
     if(length(hide.nodes) > 0) {
       nodelist <- paste0(nodelist,
@@ -97,6 +103,7 @@ build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = N
     }
   }
 
+  # Hide edges leading to hidden nodes without a title
   if(exists("hide.edges")) {
     if(length(hide.edges) > 0) {
 

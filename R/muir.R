@@ -1,7 +1,9 @@
 #' Explore Datasets with Trees
 #'
 #' This function allows users to easily and dynamically explore or document a
-#' dataset using a tree structure.
+#' data.frame using a tree data structure. Columns of interest in the data.frame can
+#' be provided to the function, as well as critieria for how they should be represented
+#' in discrete nodes, to generate a data tree representing those columns and filters.
 #' @param data A data frame to be explored using trees
 #' @param node.levels A character vector of columns from \code{data} that will be used to
 #' construct the tree that are provided in the order that they should appear in the tree levels.
@@ -10,7 +12,9 @@
 #'  nodes for all distinct values of the column in the date.frame, a specific number of values
 #'  (i.e., the "Top (n)" values), and whether or not to aggregate remaining values into a separate
 #'  "Other" node, or to use user-provided filter criteria for the column as provided in
-#'  the \code{level.criteria} parameter.
+#'  the \code{level.criteria} parameter. This does mean that the column names cannot have a ":"
+#'  and must be replaced in the data.frame before being passed in to \code{muir} as
+#'  the \code{data} param.
 #'
 #'  Values can be provided as "colname", "colname:*", "colname:3", "colname:+",
 #'  or "colname:*+". The separator character ":" and the special characters in the suffix that
@@ -58,7 +62,13 @@
 #' @param label.vals Additional values to include in the node provided as a
 #' character vector. The values must take the form of dplyr \code{summarise} functions
 #' (as characters) and include the columns the functions should be run against (e.g.,
-#' "min(hp)", "mean(hp)", etc.)
+#' "min(hp)", "mean(hp)", etc.). If no custom suffix is added, the summary function itself
+#' will be used as the label. Similar to \code{node.levels} a custom suffix can be added
+#' using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP"). In this example,
+#' the label printed in the node will be "Avg HP:", otherwise it would be mean_hp (note
+#' that the parens "(" and ")" are removed to be rendered in HTML without error). As with
+#' \code{node.levels}, the column name itself cannot have a ":" and must be replaced in
+#' the data.frame before being passed in to \code{muir} as the \code{data} param.
 #' @param tree.dir The direction the tree graph should be rendered. Defaults to "LR"
 #' \enumerate{
 #' \item Use "LR" for left-to-right
@@ -73,18 +83,77 @@
 #' empty or stop expanding the tree once there is a parent node that is empty.
 #' Defaults to FALSE -- don't show empty children nodes
 #' @param tree.height Control tree height to zoom in/out on nodes. Passed to DiagrammeR
-#' as \code{height} param. Defaults to NULL
+#' as \code{height} param. Defaults to -1, which appears to optimize the tree size
+#' for viewing (still researching why exactly that works! :-))
 #' @param tree.width Control tree width to zoom in/out on nodes. Passed to DiagrammeR
-#' as \code{width} param. Defaults to NULL
-#' @return An object with classes \code{DiagrammeR} and \code{htmlwidget} that will
-#' print itself as HTML.
+#' as \code{width} param. Defaults to -1, which appears to best optimize the tree size
+#' for viewing (still researching why exactly that works! :-))
+#' @return An object of class \code{htmlwidget} (via DiagrammeR) that will
+#' intelligently print itself into HTML in a variety of contexts
+#' including the R console, within R Markdown documents,
+#' and within Shiny output bindings.
+#' #' @examples
+#' \dontrun{
+#' # Load in the 'mtcars' dataset
+#' data(mtcars)
+#'
+#' # Basic exploration - show all values
+#' muir(data = mtcars, node.levels = c("cyl:*", "carb:*"))
+#'
+#' # Basic exploration - show all values overriding default node.limit
+#' muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), node.limit = 5)
+#'
+#' # Show all values overriding default node.limit for each column
+#' muir(data = mtcars, node.levels = c("cyl:2", "carb:5"))
+#'
+#' # Show all values overriding default node.limit for each column
+#' # and aggregating all distinct values above the node.limit into a
+#' # separate "Other" column to collect remaining values
+#' # Top 2 occurring 'carb' values will be returned in nodes, remaining
+#' # values will be aggregated into the "Other" node at that tree level
+#' muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"))
+#'
+#' # Add additional calculations to each node output (dplyr::summarise functions)
+#' muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+#' label.vals = c("min(wt)", "max(wt)"))
+#'
+#' # Make label values more reader-friendly
+#' muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#'
+#' # Instead of just returning top counts for columns provide in \code{node.levels},
+#' # provide custom filter criteria and custom node titles in \code{label.vals}
+#' # (criteria could also be read in from a csv file as a data.frame)
+#' criteria <- data.frame(col = c("cyl", "cyl", "carb"),
+#' oper = c("<", ">=", "=="),
+#' val = c(4, 4, 2),
+#' title = c("Less Than 4 Cylinders", "4 or More Cylinders", "2 Carburetors"))
+#'
+#'muir(data = mtcars, node.levels = c("cyl", "carb"),
+#'level.criteria = criteria,
+#'label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#'
+#' # Use same criteria but show all other values for the column where NOT
+#' EQUAL to the combination of the filters provided for that column (e.g., for cyl
+#' where !(cyl < 4 | cyl >= 4) in an "Other" node
+#' muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+#' level.criteria = criteria,
+#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#'
+#' # Show empty child nodes (balanced tree)
+#' muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+#' level.criteria = criteria,
+#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
+#' show.empty.child = TRUE)
+#'
+#' }
 #' @import dplyr stringr
 #' @export
 #' @rdname muir
 
 muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label.vals = NULL,
                  tree.dir = "LR", show.percent = TRUE, num.precision = 2,
-                 show.empty.child = FALSE, tree.height = NULL, tree.width = NULL) {
+                 show.empty.child = FALSE, tree.height = -1, tree.width = -1) {
 
   # Hack for CRAN R CMD check
   parent <- NULL; rm("parent")
@@ -102,6 +171,13 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
     stop("data param must be a data.frame")
   }
 
+  if(sum(grepl(":", colnames(data))) > 0) {
+    # Using colnames that have an ":" embedded in the name will cause issues with muir processing
+    # the custom node.level and label.vals suffixes.
+    warning("There are columns names in the 'data' data.frame that include a ':'. ",
+            "These columns should not be used in 'node.levels' or 'label.vals' or there may be errors.")
+  }
+
   if(class(node.levels) != "character") {
     stop("node.levels must be a vector of type character. Provide the column names surrounded by quotes.")
   }
@@ -109,7 +185,6 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   if(!(tree.dir %in% c("LR", "RL", "TB", "BT"))) {
     stop("tree.dir must be either 'LR', 'RL', 'TB', or 'BT'.")
   }
-
 
   ## Remove factors from data so there are not filter or summarise errors later
   i <- sapply(data, is.factor)
@@ -119,10 +194,22 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   node.criteria <- data.frame(index = 1:length(node.levels),
                               do.call(rbind, str_split(node.levels, ":")),
                               stringsAsFactors = FALSE)
-  colnames(node.criteria) <- c("index", "col", "criteria")
 
-  #make sure cols with no node.level criteria are marked as NA (they will be repeated in df)
-  node.criteria$criteria[node.criteria$col == node.criteria$criteria] <- NA
+  # check whether any ":" suffixes were provided (and split off) for any node.criteria cols
+  if (length(colnames(node.criteria)) == 3) {
+
+    colnames(node.criteria) <- c("index", "col", "criteria")
+
+    #make sure cols with no node.level criteria are marked as NA (they will be repeated in df)
+    node.criteria[,3][node.criteria[,2] == node.criteria[,3]] <- NA
+
+  } else { # no ":" found so no split occurred. Force 3rd column as NA
+
+    node.criteria <- dplyr::mutate(node.criteria, criteria = NA)
+
+  }
+
+  colnames(node.criteria) <- c("index", "col", "criteria")
   node.levels <- as.vector(unlist(node.criteria$col))
 
   ## Ensure all node.levels provided exist as columns in the data df
@@ -131,48 +218,30 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   }
 
   ## Check if level.criteria will be used based on node.levels and if so that
-  ## the value provided for level.criteria in in the correct format ad supports
+  ## the value provided for level.criteria is in the correct format ad supports
   ## the columns provided in node.levels
 
-    ## Get columns from node.levels that did not request all or 'n' number of values
-    crit.cols <- unique(node.criteria$col[is.na(node.criteria$criteria)|
-                                            node.criteria$criteria == "+"])
+  ## Get columns from node.levels that did not request all or 'n' number of values
+  crit.cols <- unique(node.criteria$col[is.na(node.criteria$criteria)|
+                                          node.criteria$criteria == "+"])
 
-    ## TBD -- make the errors more descriptive to user
-    ## Check level.criteria and stop if invalid
-    if (length(crit.cols) > 0) {
+  ## Check level.criteria and stop if invalid
+  if (length(crit.cols) > 0) {
 
-      # validate the level.critera param
-      validate.level.criteria(level.criteria) # will stop if error is found
+    # validate the level.critera param
+    validate.level.criteria(level.criteria) # will stop if error is found
 
-#       if(is.null(level.criteria))
-#         # cannot be NULL if there is one or more columns needing it
-#         stop(paste0("level.criteria cannot be NULL. There are ",length(crit.cols),
-#                     " that require level.criteria: ", paste(crit.cols, collapse = ", ")))
-#       }
-#
-#       if(!inherits(level.criteria,"data.frame")) {
-#         # must be a df
-#         stop("level.criteria must be a data.frame")
-#       }
-#
-#       if(ncol(level.criteria) != 4) {
-#         # must have 4 cols (col, oper, val, label)
-#         stop("The level.criteria data.frame requires 4 columns that contain: ",
-#              "the column name, an operator, a value, and a node title for that criteria condition")
-#       }
+    ## if the level.criteria param passed all the checks above, continue processing
+    colnames(level.criteria) <- c("col", "oper", "val", "title") # set names
+    level.criteria[] <- lapply(level.criteria, as.character) # and remove factors
 
-      ## if the level.criteria param passed all the checks above, continue processing
-        colnames(level.criteria) <- c("col", "oper", "val", "title") # set names
-        level.criteria[] <- lapply(level.criteria, as.character) # and remove factors
-
-      if(sum(unique(crit.cols) %in% unique(level.criteria$col)) !=
-                  length(unique(crit.cols))) {
-        # all column names without ":*" or a ":{digit}" are not present in the level.criteria df
-        stop("The level.criteria data.frame is missing values for the following columns: ",
-             paste(setdiff(unique(crit.cols), unique(level.criteria$col)), collapse = ", "))
-      }
+    if(sum(unique(crit.cols) %in% unique(level.criteria$col)) !=
+         length(unique(crit.cols))) {
+      # all column names without ":*" or a ":{digit}" are not present in the level.criteria df
+      stop("The level.criteria data.frame is missing values for the following columns: ",
+           paste(setdiff(unique(crit.cols), unique(level.criteria$col)), collapse = ", "))
     }
+  }
 
   ## Get data values for columns where the user wants nodes for each value and update criteria
   ## to use those values instead of any values passed in via level.criteria. Constrain number
@@ -219,78 +288,101 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
     }
   }
 
+  # how many nodes will be written for each tree level
   colcounts <- dplyr::group_by(level.criteria, col)
   colcounts <- dplyr::summarise(colcounts, cnt = n())
   colcounts <- dplyr::inner_join(colcounts, node.criteria, by = "col")
   colcounts <- dplyr::arrange(colcounts, index)
 
-  ## Determine number of df columns used based on node.levels
+  # number of df columns used based on node.levels
   numcols <- length(node.levels)
 
-  #Add 1 to the count to account for the remaining "other" nodes where requested
-
+  #Add 1 to the count to account for the additonal "other" nodes where requested
   for(i in 1:nrow(colcounts)) {
     if (grepl("\\+", colcounts$criteria[i])) {
       colcounts$cnt[i] <- colcounts$cnt[i] + 1
     }
   }
 
-  numnodes <- 1 + max(cumsum(cumprod(colcounts$cnt)))
+  numnodes <- 1 + max(cumsum(cumprod(colcounts$cnt))) # plus 1 for level 0 node
 
-  nodedf_cols <- c("node", "colindex", "parent", "filter", "leaf_filter", "title", "v_n")
+  # establish initital column names
+  nodedf_cols <- c("node", "colindex", "parent", "filter", "leaf_filter", "title", "nl_n")
 
-    # If label vals are provided, add them as columns in the node df
-    add.labels = NULL
-    if (!is.null(label.vals)) {
-      add.labels <- as.vector(sapply(label.vals,
-                                     function(x) {
-                                       init <- x
-                                       x1 <- str_replace(init, "\\(", "_")
-                                       x2 <- str_replace(x1, "\\)","")
-                                       paste0("v_", x2)
-                                       }))
-      nodedf_cols <- c(nodedf_cols,add.labels)
+  # If label vals are provided, add them as columns in the node df
+  add.labels = NULL
+  if (!is.null(label.vals)) {
+    # check if custom label was provided, if not create label from dplyr function itself
+    # Parse label.vals to separate out custom labels if provided
+    label.vals <- data.frame(index = 1:length(label.vals),
+                             do.call(rbind, str_split(label.vals, ":")),
+                             stringsAsFactors = FALSE)
+
+    # check whether any ":" suffixes were provided (and split off) for any label.vals
+    if (length(colnames(label.vals)) == 2) {
+      # no ":" found so no split occurred. Force 3rd column as NA
+      label.vals <- dplyr::mutate(label.vals, label = NA)
     }
+
+    colnames(label.vals) <- c("index", "fun", "label")
+
+    # make sure label.vals with no customer label are marked as NA (they will be repeated in df)
+    label.vals$label[label.vals$fun == label.vals$label] <- NA
+
+    # remove special chars that may not render in HTML correctly
+    label.vals$label <- stringr::str_replace_all(label.vals$label, "[[:punct:]]", " ")
+    label.vals$label <- stringr::str_trim(label.vals$label)
+
+    for (l in 1:nrow(label.vals)) {
+
+      if(is.na(label.vals$label[l])) {
+
+        init <- label.vals$fun[l]
+        x1 <- str_replace(init, "\\(", "_")
+        x2 <- str_replace(x1, "\\)","")
+        add.labels <- c(add.labels, paste0("nl_", x2))
+
+      } else {
+
+        add.labels <- c(add.labels, paste0("nl_", label.vals$label[l]))
+      }
+
+    }
+    # add columns matching the names that should be printed for each additional label
+    nodedf_cols <- c(nodedf_cols,add.labels)
+  }
 
 
   nodedf <- data.frame(matrix(ncol = length(nodedf_cols), nrow = numnodes))
   colnames(nodedf) <- nodedf_cols
 
-  ## Set parent node
+  ## Set parent node (level 0) values
   nodedf$node[1] <- 1
   nodedf$colindex[1] <- 0
   nodedf$parent[1] <- "None"
   nodedf$filter[1] <- "None"
   nodedf$leaf_filter[1] <- "None"
   nodedf$title[1] <- "All"
-  nodedf$v_n[1] <- as.integer(dplyr::summarise(data, n()))
+  nodedf$nl_n[1] <- as.integer(dplyr::summarise(data, n()))
 
   ## Add values for additional lables if provided
   if (!is.null(add.labels)) {
     for (l in 1:length(add.labels)) {
-      if (nodedf$v_n[1] > 0) {
+      if (nodedf$nl_n[1] > 0) {
 
-      nodedf[, add.labels[l]][1] <- s_summarise(data, label.vals[l])[[1]]
+        nodedf[, add.labels[l]][1] <- s_summarise(data, label.vals$fun[l])[[1]]
 
-      ## if value is numeric/double, format to decimals places = num.precision
-      if (class(nodedf[, add.labels[l]][1]) %in% c("numeric", "double")) {
-        nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][1],
-                                                                digits = num.precision),
-                                                          nsmall = num.precision))
-      }
-#         as.character(format(round(s_summarise(data, label.vals[l]),
-#                                                  digits = num.precision),
-#                                            nsmall = num.precision))
-      } else {
-        nodedf[, add.labels[l]][1] <- NA
+        ## if value is numeric/double, format to decimals places = num.precision
+        ## character columns/values will be coerced to 'NA'
+        nodedf[, add.labels[l]][1] <- format(round(as.numeric(nodedf[, add.labels[l]][1]),
+                                                   digits = num.precision),
+                                             nsmall = num.precision)
       }
     }
   }
 
-
-
-  ### Build out binary tree table nodedf
-  cur_node <- 2
+  ### Build out tree table nodedf
+  cur_node <- 2 # cur_node = 1 was the parent (level 0) node
 
   for (r in 1:numcols) { # loop through the columns provided from the dataset
 
@@ -302,7 +394,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
       root <- parnodes$node[pn]
       leaf_filter <- NULL
 
-      if (!show.empty.child & parnodes$v_n[pn] == 0) {
+      if (!show.empty.child & parnodes$nl_n[pn] == 0) {
 
         ## if parent node has no values, set the child leaves as NA/0
         nodedf$node[cur_node] <- cur_node
@@ -311,7 +403,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
         nodedf$filter[cur_node] <- NA
         nodedf$leaf_filter[cur_node] <- NA
         nodedf$title[cur_node] <- NA
-        nodedf$v_n[cur_node] <- 0
+        nodedf$nl_n[cur_node] <- 0
 
         if (!is.null(add.labels)) {
           for (l in 1:length(add.labels)) {
@@ -352,27 +444,20 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
           nodedf$filter[cur_node] <- cur_filter
           cur_filter_df <- s_filter(data, cur_filter)
           dfcount <- as.integer(dplyr::summarise(cur_filter_df, n()))
-          nodedf$v_n[cur_node] <- dfcount
+          nodedf$nl_n[cur_node] <- dfcount
 
-          if (!is.null(add.labels)) {
+          ## Add values for additional lables if provided
+          if (!is.null(add.labels)) { #
             for (l in 1:length(add.labels)) {
-              if (nodedf$v_n[cur_node] > 0) {
+              if (nodedf$nl_n[cur_node] > 0) {
 
-                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals[l])[[1]]
+                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals$fun[l])[[1]]
 
                 ## if value is numeric/double, format to decimals places = num.precision
-                if (class(nodedf[, add.labels[l]][cur_node]) %in% c("numeric", "double")) {
-                  nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][cur_node],
-                                                                          digits = num.precision),
-                                                                    nsmall = num.precision))
-                }
-
-#                 nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
-#                                                                               label.vals[l]),
-#                                                                   digits = num.precision),
-#                                                             nsmall = num.precision))
-              } else {
-                nodedf[, add.labels[l]][cur_node] <- NA
+                ## character columns/values will be coerced to 'NA'
+                nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
+                                                                  digits = num.precision),
+                                                            nsmall = num.precision)
               }
             }
           }
@@ -381,7 +466,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
         }
 
-        ## Add "Other" Node to capture remaining data
+        ## Add "Other" Node to capture remaining data not included in the child filters
         if(grepl("\\+",node.criteria$criteria[node.criteria$col == node.levels[r]])) {
           nodedf$node[cur_node] <- cur_node
           nodedf$colindex[cur_node] <- r
@@ -401,27 +486,21 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
           nodedf$filter[cur_node] <- cur_filter
           cur_filter_df <- s_filter(data, cur_filter)
           dfcount <- as.integer(dplyr::summarise(cur_filter_df, n()))
-          nodedf$v_n[cur_node] <- dfcount
+          nodedf$nl_n[cur_node] <- dfcount
           nodedf$parent[cur_node] <- root
 
+          ## Add values for additional lables if provided
           if (!is.null(add.labels)) {
             for (l in 1:length(add.labels)) {
-              if (nodedf$v_n[cur_node] > 0) {
+              if (nodedf$nl_n[cur_node] > 0) {
 
-                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals[l])[[1]]
+                nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals$fun[l])[[1]]
 
                 ## if value is numeric/double, format to decimals places = num.precision
-                if (class(nodedf[, add.labels[l]][cur_node]) %in% c("numeric", "double")) {
-                  nodedf[, add.labels[l]][1] <- as.character(format(round(nodedf[, add.labels[l]][cur_node],
-                                                                          digits = num.precision),
-                                                                    nsmall = num.precision))
-                }
-#                 nodedf[, add.labels[l]][cur_node] <- as.character(format(round(s_summarise(cur_filter_df,
-#                                                                               label.vals[l]),
-#                                                                   digits = num.precision),
-#                                                             nsmall = num.precision))
-              } else {
-                nodedf[, add.labels[l]][cur_node] <- NA
+                ## character values will be coerced to 'NA'
+                nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
+                                                                  digits = num.precision),
+                                                            nsmall = num.precision)
               }
             }
           }
@@ -433,15 +512,18 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
     }
   }
 
-  # add percent of total n() value to the df for inclusion as a node label later
+  # add percent of total n() value to the nodedf for inclusion as a node label later
   if (show.percent) {
-    v_pct <- format(round((as.numeric(nodedf$v_n)/as.numeric(nodedf$v_n[1])) * 100,
+    nl_pct <- format(round((as.numeric(nodedf$nl_n)/as.numeric(nodedf$nl_n[1])) * 100,
                           digits = num.precision), nsmall = num.precision)
-    nodedf <- dplyr::mutate(nodedf, v_pct = v_pct)
+    nodedf <- dplyr::mutate(nodedf, "nl_%" = nl_pct)
   }
 
+  # remove any left-over NA nodes
+  # TBD -- is this still needed?
   nodedf <- filter(nodedf, !is.na(node))
-  #return(nodedf)
+
+  # create htmlwidget/DiagrammeR object
   tree <- build_tree(nodedf, tree.dir, tree.height, tree.width)
 
   # return/render generated tree

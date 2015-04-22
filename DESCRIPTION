@@ -1,7 +1,7 @@
 Package: muir
 Type: Package
-Title: Exploring Datasets with Trees
-Version: 0.0.0.9003
+Title: Exploring Datasets with Tree Data Structures
+Version: 0.0.0.9004
 Authors@R: person("Justin", "Alford", , "justin.alford@gmail.com", role = c("aut", "cre"))
 Description: This packages allows users to easily and dynamically explore or document a
       dataset using a tree structure.
