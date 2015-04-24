@@ -10,7 +10,7 @@ muir(data, node.levels, node.limit = 3, level.criteria = NULL,
   tree.width = -1)
 }
 \arguments{
-\item{data}{A data frame to be explored using trees}
+\item{data}{A data.frame to be explored using trees}
 
 \item{node.levels}{A character vector of columns from \code{data} that will be used to
 construct the tree that are provided in the order that they should appear in the tree levels.
@@ -51,7 +51,7 @@ construct the tree that are provided in the order that they should appear in the
  node will not be created.
  }}
 
-\item{node.limit}{When providing a column in \code{node.levels} with an ":*" suffix,
+\item{node.limit}{Numeric value. When providing a column in \code{node.levels} with an ":*" suffix,
 the \code{node.limit} will limit how many distinct values to actually process to prevent
 run-away queries and unreadable trees. The limit defaults to 3 (not including an additional
 4th if requesting to provide an "Other" node as well with a ":*+" suffix). If the
@@ -60,7 +60,7 @@ will include the Top "X" values based on count, where "X" = \code{node.limit}. I
 \code{node.limit} is greater than the number of distinct values for the column, it will
 be ignored.}
 
-\item{level.criteria}{A data frame consisting of 4 character columns containing
+\item{level.criteria}{A data.frame consisting of 4 character columns containing
 column names (matching -- without suffixes -- the columns in \code{node.levels} that will
 use the criteria in \code{level.criteria} to determine the filters used for each node),
 an operator or boolean function (e.g., "==",">", "is.na", "is.null"), a value,
@@ -68,7 +68,7 @@ and a corresponding node title for the node displaying that criteria.
 
 E.g.,"wt, ">=", "4000", "Heavy Cars"}
 
-\item{label.vals}{Additional values to include in the node provided as a
+\item{label.vals}{Character vector of additional values to include in the node provided as a
 character vector. The values must take the form of dplyr \code{summarise} functions
 (as characters) and include the columns the functions should be run against (e.g.,
 "min(hp)", "mean(hp)", etc.). If no custom suffix is added, the summary function itself
@@ -79,7 +79,7 @@ that the parens "(" and ")" are removed to be rendered in HTML without error). A
 \code{node.levels}, the column name itself cannot have a ":" and must be replaced in
 the data.frame before being passed in to \code{muir} as the \code{data} param.}
 
-\item{tree.dir}{The direction the tree graph should be rendered. Defaults to "LR"
+\item{tree.dir}{Character. The direction the tree graph should be rendered. Defaults to "LR"
 \enumerate{
 \item Use "LR" for left-to-right
 \item Use "RL" for right-to left
@@ -87,20 +87,20 @@ the data.frame before being passed in to \code{muir} as the \code{data} param.}
 \item User "BT" for bottom-to-top
 }}
 
-\item{show.percent}{Should nodes show the percent of records represented by
+\item{show.percent}{Logical. Should nodes show the percent of records represented by
 that node compared to the total number of records in \code{data.} Defaults to TRUE}
 
 \item{num.precision}{Number of digits to print numeric label values out to}
 
-\item{show.empty.child}{Show a balanced tree with children nodes that are all
+\item{show.empty.child}{Logical. Show a balanced tree with children nodes that are all
 empty or stop expanding the tree once there is a parent node that is empty.
 Defaults to FALSE -- don't show empty children nodes}
 
-\item{tree.height}{Control tree height to zoom in/out on nodes. Passed to DiagrammeR
+\item{tree.height}{Numeric. Control tree height to zoom in/out on nodes. Passed to DiagrammeR
 as \code{height} param. Defaults to -1, which appears to optimize the tree size
 for viewing (still researching why exactly that works! :-))}
 
-\item{tree.width}{Control tree width to zoom in/out on nodes. Passed to DiagrammeR
+\item{tree.width}{Numberic. Control tree width to zoom in/out on nodes. Passed to DiagrammeR
 as \code{width} param. Defaults to -1, which appears to best optimize the tree size
 for viewing (still researching why exactly that works! :-))}
 }
@@ -109,7 +109,6 @@ An object of class \code{htmlwidget} (via DiagrammeR) that will
 intelligently print itself into HTML in a variety of contexts
 including the R console, within R Markdown documents,
 and within Shiny output bindings.
-#'
 }
 \description{
 This function allows users to easily and dynamically explore or document a
@@ -123,30 +122,37 @@ in discrete nodes, to generate a data tree representing those columns and filter
 data(mtcars)
 
 # Basic exploration - show all values
-muir(data = mtcars, node.levels = c("cyl:*", "carb:*"))
+mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"))
+mtTree
 
 # Basic exploration - show all values overriding default node.limit
-muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), node.limit = 5)
+mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), node.limit = 5)
+mtTree
 
-# Show all values overriding default node.limit for each column
-muir(data = mtcars, node.levels = c("cyl:2", "carb:5"))
+# Show all values overriding default node.limit differently for each column
+mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:5"))
+mtTree
 
 # Show all values overriding default node.limit for each column
 # and aggregating all distinct values above the node.limit into a
 # separate "Other" column to collect remaining values
-# Top 2 occurring 'carb' values will be returned in nodes, remaining
-# values will be aggregated into the "Other" node at that tree level
-muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"))
+
+# Top 2 occurring 'carb' values will be returned in their own nodes,
+# remaining values/counts will be aggregated into a separate "Other" node
+mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"))
+mtTree
 
 # Add additional calculations to each node output (dplyr::summarise functions)
-muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
 label.vals = c("min(wt)", "max(wt)"))
+mtTree
 
-# Make label values more reader-friendly
-muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
+# Make new label values more reader-friendly
+mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
 label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+mtTree
 
-# Instead of just returning top counts for columns provide in \\code{node.levels},
+# Instead of just returning top counts for columns provided in \\code{node.levels},
 # provide custom filter criteria and custom node titles in \\code{label.vals}
 # (criteria could also be read in from a csv file as a data.frame)
 criteria <- data.frame(col = c("cyl", "cyl", "carb"),
@@ -154,23 +160,29 @@ oper = c("<", ">=", "=="),
 val = c(4, 4, 2),
 title = c("Less Than 4 Cylinders", "4 or More Cylinders", "2 Carburetors"))
 
-muir(data = mtcars, node.levels = c("cyl", "carb"),
+mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb"),
 level.criteria = criteria,
 label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+mtTree
 
 # Use same criteria but show all other values for the column where NOT
-EQUAL to the combination of the filters provided for that column (e.g., for cyl
-where !(cyl < 4 | cyl >= 4) in an "Other" node
-muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+# EQUAL to the combination of the filters provided for that column (e.g., for cyl
+# where !(cyl < 4 | cyl >= 4) in an "Other" node
+mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
 label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+mtTree
 
 # Show empty child nodes (balanced tree)
-muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
+mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
 label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
 show.empty.child = TRUE)
+mtTree
 
+# Save tree to HTML file with \\code{htmlwidgets} package to working directory
+mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"))
+htmlwidgets::saveWidget(mtTree, "mtTree.html")
 }
 }
 

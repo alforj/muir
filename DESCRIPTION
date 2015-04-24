@@ -13,3 +13,5 @@ Imports:
       DiagrammeR (>= 0.5),
       dplyr (>= 0.4.1),
       stringr (>= 0.6.2)
+Suggests:
+      htmlwidgets (>= 0.3.2)
