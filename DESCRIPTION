@@ -3,8 +3,7 @@ Type: Package
 Title: Exploring Data with Tree Data Structures
 Version: 0.0.1
 Authors@R: person("Justin", "Alford", , "justin.alford@gmail.com", role = c("aut", "cre"))
-Description: A simple tool allowing users to easily and dynamically explore or document a
-data set using a tree structure.
+Description: A simple tool allowing users to easily and dynamically explore or document a data set using a tree structure.
 URL: https://github.com/alforj/muir
 BugReports: https://github.com/alforj/muir/issues
 Depends: R (>= 3.1.2)
