@@ -6,6 +6,7 @@ Authors@R: person("Justin", "Alford", , "justin.alford@gmail.com", role = c("aut
 Description: This packages allows users to easily and dynamically explore or document a
       dataset using a tree structure.
 URL: https://github.com/alforj/muir
+BugReports: https://github.com/alforj/muir/issues
 Depends: R (>= 3.1.2)
 License: GPL (>= 2)
 LazyData: true
