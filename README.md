@@ -32,25 +32,32 @@ various depths and widths.
 ```r
 library(muir)
 data(mtcars)
-mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), tree.height = 1200, tree.width = 800)
+mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), 
+               tree.height = 1200, tree.width = 800)
 ```
 
-<!--html_preserve--><div id="htmlwidget-674" style="width:800px;height:1200px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-674">{ "x": {
+<!--html_preserve--><div id="htmlwidget-5761" style="width:800px;height:1200px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-5761">{ "x": {
  "diagram": "graph LR;1(All<br/>n: 32<br/>%: 100.00<br/>);1-->2(cyl = 8<br/>n: 14<br/>%:  43.75<br/>);1-->3(cyl = 4<br/>n: 11<br/>%:  34.38<br/>);1-->4(cyl = 6<br/>n: 7<br/>%:  21.88<br/>);2-->5(carb = 2<br/>n: 4<br/>%:  12.50<br/>);2-->6(carb = 4<br/>n: 6<br/>%:  18.75<br/>);2-->7(carb = 1<br/>n: 0<br/>%:   0.00<br/>);3-->8(carb = 2<br/>n: 6<br/>%:  18.75<br/>);3-->9(carb = 4<br/>n: 0<br/>%:   0.00<br/>);3-->10(carb = 1<br/>n: 5<br/>%:  15.62<br/>);4-->11(carb = 2<br/>n: 0<br/>%:   0.00<br/>);4-->12(carb = 4<br/>n: 4<br/>%:  12.50<br/>);4-->13(carb = 1<br/>n: 2<br/>%:   6.25<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 
 ### More complicated example
-Instead of just returning top counts for columns provided in \code{node.levels},
-provide custom filter criteria and custom node titles in \code{label.vals}
-criteria could also be read in from a csv file as a data.frame)
+Instead of just returning top counts for columns provided in *node.levels*,
+provide custom filter criteria and custom node titles in *level.criteria*
+(*level.criteria* could also be read in from a stored file (e.g., a crtieria.csv) as a data.frame)
 
-The **criteria** data.frame includes the column names, an operator and associated value (e.g., == 4), and
-a node title to accompany each node generated for that filter criteria. Adding a "+" suffix after the column name in the *node.levels* parameter will add an extra "Other" node that will aggregate all values node already provided in the *criteria* value or for values below the *node.limit* provided. Additional label values can be provided
-with the *label.vals* parameter using [**dplyr**](https://github.com/hadley/dplyr) summary functions. Custom
-labels for each value can be provided by adding custom text after the ":" separator. Lastly, the direction the 
-tree is drawn can be changed from the default left-to-right to a top-to-bottom ("TB") rendering by providing a new
-value for *tree.dir*.
+The **criteria** data.frame below includes the column names, operators, and associated values 
+(e.g., "cyl" <= 4), and a node title to accompany each node generated for that filter criteria. 
+Adding a "+" suffix after the column name in the *node.levels* parameter will add an extra 
+"Other" node that will aggregate all values node already provided in the *level.criteria* value 
+or for values below the *node.limit* provided.
+
+Additional label values can be provided with the *label.vals* parameter using 
+[**dplyr**](https://github.com/hadley/dplyr) summary functions. Custom labels for each value 
+can be provided by adding custom text after the ":" separator. 
+
+Lastly, the direction the tree is drawn can be changed from the default left-to-right to a 
+top-to-bottom ("TB") rendering by providing a new value for *tree.dir*.
 
 
 ```r
@@ -66,8 +73,8 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
                tree.height = 400, tree.width = 800)
 ```
 
-<!--html_preserve--><div id="htmlwidget-2069" style="width:800px;height:400px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-2069">{ "x": {
+<!--html_preserve--><div id="htmlwidget-9097" style="width:800px;height:400px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-9097">{ "x": {
  "diagram": "graph TB;1(All<br/>n: 32<br/>Min Weight: 1.51<br/>Max Weight: 5.42<br/>%: 100.00<br/>);1-->2(Up to 4 Cylinders<br/>n: 11<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  34.38<br/>);1-->3(More than 4 Cylinders<br/>n: 21<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  65.62<br/>);2-->4(2 Carburetors<br/>n: 6<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  18.75<br/>);2-->5(Other<br/>n: 5<br/>Min Weight: 1.84<br/>Max Weight: 2.46<br/>%:  15.62<br/>);3-->6(2 Carburetors<br/>n: 4<br/>Min Weight: 3.44<br/>Max Weight: 3.85<br/>%:  12.50<br/>);3-->7(Other<br/>n: 17<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  53.12<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 

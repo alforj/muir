@@ -31,22 +31,29 @@ various depths and widths.
 ```{r }
 library(muir)
 data(mtcars)
-mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), tree.height = 1200, tree.width = 800)
+mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), 
+               tree.height = 1200, tree.width = 800)
 ```
 
 `r mtTree`
 
 ### More complicated example
-Instead of just returning top counts for columns provided in \code{node.levels},
-provide custom filter criteria and custom node titles in \code{label.vals}
-criteria could also be read in from a csv file as a data.frame)
+Instead of just returning top counts for columns provided in *node.levels*,
+provide custom filter criteria and custom node titles in *level.criteria*
+(*level.criteria* could also be read in from a stored file (e.g., a crtieria.csv) as a data.frame)
 
-The **criteria** data.frame includes the column names, an operator and associated value (e.g., == 4), and
-a node title to accompany each node generated for that filter criteria. Adding a "+" suffix after the column name in the *node.levels* parameter will add an extra "Other" node that will aggregate all values node already provided in the *criteria* value or for values below the *node.limit* provided. Additional label values can be provided
-with the *label.vals* parameter using [**dplyr**](https://github.com/hadley/dplyr) summary functions. Custom
-labels for each value can be provided by adding custom text after the ":" separator. Lastly, the direction the 
-tree is drawn can be changed from the default left-to-right to a top-to-bottom ("TB") rendering by providing a new
-value for *tree.dir*.
+The **criteria** data.frame below includes the column names, operators, and associated values 
+(e.g., "cyl" <= 4), and a node title to accompany each node generated for that filter criteria. 
+Adding a "+" suffix after the column name in the *node.levels* parameter will add an extra 
+"Other" node that will aggregate all values node already provided in the *level.criteria* value 
+or for values below the *node.limit* provided.
+
+Additional label values can be provided with the *label.vals* parameter using 
+[**dplyr**](https://github.com/hadley/dplyr) summary functions. Custom labels for each value 
+can be provided by adding custom text after the ":" separator. 
+
+Lastly, the direction the tree is drawn can be changed from the default left-to-right to a 
+top-to-bottom ("TB") rendering by providing a new value for *tree.dir*.
 
 ```{r}
 criteria <- data.frame(col = c("cyl", "cyl", "carb"),
