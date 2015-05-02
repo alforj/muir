@@ -2,7 +2,7 @@
 
 The **muir** package allows users to explore a data.frame using the tree data structure with minimal effort by simply providing the data.frame columns to be explored. In addition, the **muir** package allows for more targeted tree data structures to be created with specific column criteria as a method for documenting and communicating the data structure and relationships within a data set. These data tree structures can be viewed within the *RStudio* console, standard browers, or saved as HTML for sharing using the **htmlwidgets** package.
 
-The package legerages the infrastructure provided by [**DiagrammeR**](http://rich-iannone.github.io/DiagrammeR/).
+The package leverages the infrastructure provided by [**DiagrammeR**](http://rich-iannone.github.io/DiagrammeR/).
 
 ## Installation
 
@@ -39,6 +39,8 @@ library(muir)
 data(mtcars)
 mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"), 
                tree.height = 1200, tree.width = 800)
+
+mtTree
 ```
 
 `r mtTree`
@@ -72,6 +74,8 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
                label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
                tree.dir = "TB",
                tree.height = 400, tree.width = 800)
+
+mtTree
 ```
 
 `r mtTree`
