@@ -11,7 +11,8 @@
 #' intelligently print itself into HTML in a variety of contexts
 #' including the R console, within R Markdown documents,
 #' and within Shiny output bindings.
-#' @import dplyr stringr DiagrammeR
+#' @import dplyr DiagrammeR
+#' @importFrom stringr str_replace
 build_tree <- function(data, tree.dir = "LR", tree.height = NULL, tree.width = NULL) {
 
   # Hack for CRAN R CMD check

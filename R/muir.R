@@ -161,8 +161,11 @@
 #' htmlwidgets::saveWidget(mtTree, "mtTree.html")
 #' }
 #'
-#' @import dplyr stringr
-#'
+#' @import dplyr
+#' @importFrom stringr str_replace_all
+#' @importFrom stringr str_trim
+#' @importFrom stringr str_split
+#' @importFrom stringr str_extract
 #' @export
 #'
 #' @rdname muir
@@ -209,7 +212,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
   ## Parse node.level columns to separate colnames from the requested criteria
   node.criteria <- data.frame(index = 1:length(node.levels),
-                              do.call(rbind, str_split(node.levels, ":")),
+                              do.call(rbind, stringr::str_split(node.levels, ":")),
                               stringsAsFactors = FALSE)
 
   # check whether any ":" suffixes were provided (and split off) for any node.criteria cols
@@ -287,7 +290,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
       } else {
 
         # get the top n values based on the param passed with the invidivual column
-        col.values <- dplyr::slice(col.values, 1:str_extract(node.criteria$criteria[i], "\\d+"))
+        col.values <- dplyr::slice(col.values, 1:stringr::str_extract(node.criteria$criteria[i], "\\d+"))
       }
 
       col.values <- unlist(s_select(col.values, node.criteria$col[i]))
@@ -341,7 +344,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
     # check if custom label was provided, if not create label from dplyr function itself
     # Parse label.vals to separate out custom labels if provided
     label.vals <- data.frame(index = 1:length(label.vals),
-                             do.call(rbind, str_split(label.vals, ":")),
+                             do.call(rbind, stringr::str_split(label.vals, ":")),
                              stringsAsFactors = FALSE)
 
     # check whether any ":" suffixes were provided (and split off) for any label.vals
