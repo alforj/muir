@@ -43,7 +43,6 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"),
 mtTree
 ```
 
-`r mtTree`
 
 ### More complicated example
 Instead of just returning top counts for columns provided in *node.levels*,
@@ -78,7 +77,6 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
 mtTree
 ```
 
-`r mtTree`
 
 ### More examples
 

@@ -44,15 +44,11 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"),
 mtTree
 ```
 
-<!--html_preserve--><div id="htmlwidget-8764" style="width:800px;height:1200px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-8764">{ "x": {
+<!--html_preserve--><div id="htmlwidget-8500" style="width:800px;height:1200px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-8500">{ "x": {
  "diagram": "graph LR;1(All<br/>n: 32<br/>%: 100.00<br/>);1-->2(cyl = 8<br/>n: 14<br/>%:  43.75<br/>);1-->3(cyl = 4<br/>n: 11<br/>%:  34.38<br/>);1-->4(cyl = 6<br/>n: 7<br/>%:  21.88<br/>);2-->5(carb = 2<br/>n: 4<br/>%:  12.50<br/>);2-->6(carb = 4<br/>n: 6<br/>%:  18.75<br/>);2-->7(carb = 1<br/>n: 0<br/>%:   0.00<br/>);3-->8(carb = 2<br/>n: 6<br/>%:  18.75<br/>);3-->9(carb = 4<br/>n: 0<br/>%:   0.00<br/>);3-->10(carb = 1<br/>n: 5<br/>%:  15.62<br/>);4-->11(carb = 2<br/>n: 0<br/>%:   0.00<br/>);4-->12(carb = 4<br/>n: 4<br/>%:  12.50<br/>);4-->13(carb = 1<br/>n: 2<br/>%:   6.25<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 
-<!--html_preserve--><div id="htmlwidget-1867" style="width:800px;height:1200px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-1867">{ "x": {
- "diagram": "graph LR;1(All<br/>n: 32<br/>%: 100.00<br/>);1-->2(cyl = 8<br/>n: 14<br/>%:  43.75<br/>);1-->3(cyl = 4<br/>n: 11<br/>%:  34.38<br/>);1-->4(cyl = 6<br/>n: 7<br/>%:  21.88<br/>);2-->5(carb = 2<br/>n: 4<br/>%:  12.50<br/>);2-->6(carb = 4<br/>n: 6<br/>%:  18.75<br/>);2-->7(carb = 1<br/>n: 0<br/>%:   0.00<br/>);3-->8(carb = 2<br/>n: 6<br/>%:  18.75<br/>);3-->9(carb = 4<br/>n: 0<br/>%:   0.00<br/>);3-->10(carb = 1<br/>n: 5<br/>%:  15.62<br/>);4-->11(carb = 2<br/>n: 0<br/>%:   0.00<br/>);4-->12(carb = 4<br/>n: 4<br/>%:  12.50<br/>);4-->13(carb = 1<br/>n: 2<br/>%:   6.25<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
-},"evals": [  ] }</script><!--/html_preserve-->
 
 ### More complicated example
 Instead of just returning top counts for columns provided in *node.levels*,
@@ -88,15 +84,11 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
 mtTree
 ```
 
-<!--html_preserve--><div id="htmlwidget-8742" style="width:800px;height:400px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-8742">{ "x": {
+<!--html_preserve--><div id="htmlwidget-5515" style="width:800px;height:400px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-5515">{ "x": {
  "diagram": "graph TB;1(All<br/>n: 32<br/>Min Weight: 1.51<br/>Max Weight: 5.42<br/>%: 100.00<br/>);1-->2(Up to 4 Cylinders<br/>n: 11<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  34.38<br/>);1-->3(More than 4 Cylinders<br/>n: 21<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  65.62<br/>);2-->4(2 Carburetors<br/>n: 6<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  18.75<br/>);2-->5(Other<br/>n: 5<br/>Min Weight: 1.84<br/>Max Weight: 2.46<br/>%:  15.62<br/>);3-->6(2 Carburetors<br/>n: 4<br/>Min Weight: 3.44<br/>Max Weight: 3.85<br/>%:  12.50<br/>);3-->7(Other<br/>n: 17<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  53.12<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 
-<!--html_preserve--><div id="htmlwidget-607" style="width:800px;height:400px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-607">{ "x": {
- "diagram": "graph TB;1(All<br/>n: 32<br/>Min Weight: 1.51<br/>Max Weight: 5.42<br/>%: 100.00<br/>);1-->2(Up to 4 Cylinders<br/>n: 11<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  34.38<br/>);1-->3(More than 4 Cylinders<br/>n: 21<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  65.62<br/>);2-->4(2 Carburetors<br/>n: 6<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  18.75<br/>);2-->5(Other<br/>n: 5<br/>Min Weight: 1.84<br/>Max Weight: 2.46<br/>%:  15.62<br/>);3-->6(2 Carburetors<br/>n: 4<br/>Min Weight: 3.44<br/>Max Weight: 3.85<br/>%:  12.50<br/>);3-->7(Other<br/>n: 17<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  53.12<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
-},"evals": [  ] }</script><!--/html_preserve-->
 
 ### More examples
 
