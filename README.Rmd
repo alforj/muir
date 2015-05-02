@@ -12,6 +12,12 @@ Install the development version of **muir** from GitHub using the **devtools** p
 devtools::install_github('alforj/muir')
 ```
 
+Or, get the v0.1.0 release from **CRAN**.
+
+```r
+install.packages('muir')
+```
+
 ## Using muir
 
 ### Basic example

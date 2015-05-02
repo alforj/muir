@@ -1,7 +1,7 @@
 Package: muir
 Type: Package
 Title: Exploring Data with Tree Data Structures
-Version: 0.1.0
+Version: 0.1.0.9000
 Authors@R: person("Justin", "Alford", , "justin.alford@gmail.com", role = c("aut", "cre"))
 Description: A simple tool allowing users to easily and dynamically explore or document a data set using a tree structure.
 URL: https://github.com/alforj/muir

@@ -1,4 +1,4 @@
-# muir 0.0.1
+# muir 0.1.0
 
 * Initial release
 
