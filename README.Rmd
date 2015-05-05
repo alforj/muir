@@ -28,7 +28,8 @@ Providing the "\*" qualifier (after the ":" separator) indicates that all distin
 should be returned as separate nodes. Obviously, depending on the data this may result in a LOT of nodes.
 As a guard against this, especially during initial exploration, a *node.limit* parameter limits the 
 number of nodes returned at each level and is defaulted to three (3). If there are more than 3 distinct
-values, then only the Top 3 occuring values will be returned. This global parameter can be adjusted for all node levels or specific limits can be provided individually for each *node.level* value.
+values, then only the Top 3 occuring values will be returned. This global parameter can be adjusted for all node levels or specific limits can be provided individually for each *node.level* value (for example, by providing "cyl:4" instead of "cyl:*" to indicate a 
+node limit of 4 for the 'cyl' column only).
 
 The resulting tree will be rendered starting with a level 0 node counting all rows in the data set. Each resulting level will be based on the columns provided by the user in *node.levels*. Each subsequent level will carry the filters from previous parent nodes forward. Percentages will be provided for each node (compared to the level 0 count) by default and can be turned off if not desired.
 
