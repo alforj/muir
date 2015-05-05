@@ -85,7 +85,7 @@
 #' @param tree.height Numeric. Control tree height to zoom in/out on nodes. Passed to DiagrammeR
 #' as \code{height} param. Defaults to -1, which appears to optimize the tree size
 #' for viewing (still researching why exactly that works! :-))
-#' @param tree.width Numberic. Control tree width to zoom in/out on nodes. Passed to DiagrammeR
+#' @param tree.width Numeric. Control tree width to zoom in/out on nodes. Passed to DiagrammeR
 #' as \code{width} param. Defaults to -1, which appears to best optimize the tree size
 #' for viewing (still researching why exactly that works! :-))
 #' @return An object of class \code{htmlwidget} (via DiagrammeR) that will

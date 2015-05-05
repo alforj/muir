@@ -22,17 +22,17 @@ install.packages('muir')
 
 ### Basic example
 A basic example using **muir** to explore the **mtcars** data set showing the 'cyl' and 'carb' columns
-and the relationship between them. Providing the "\*" qualifier (after the ":" separator) will
-show the top occuring values for those columns up to the limit indicated in the *node.limit* value. By
-default, the *node.limit* is set to 3 to curb run-away queries and unreadable trees. The value can be set
-explicitly when calling the **muir** function. 
+and the relationship between them (in that order). 
 
-The resulting tree will be rendered starting with a level 0 node counting all rows in the data set. Each resulting level will be based on the columns provided by the user and will include nodes for each distinct value (up to the limit provided, in ascending order based on occurrences). Subsequent levels will carry the filters from previous
-parent nodes forward. Percentages will be provided for each node (compared to the level 0 count) by default and can 
-be turned off if not desired.
+Providing the "\*" qualifier (after the ":" separator) indicates that all distinct values in the column
+should be returned as separate nodes. Obviously, depending on the data this may result in a LOT of nodes.
+As a guard against this, especially during initial exploration, a *node.limit* parameter limits the 
+number of nodes returned at each level and is defaulted to three (3). If there are more than 3 distinct
+values, then only the Top 3 occuring values will be returned. This global parameter can be adjusted for all node levels or specific limits can be provided individually for each *node.level* value.
 
-*tree.height* and *tree.width* values control how the tree is rendered and can be adjusted to best fit trees of
-various depths and widths.
+The resulting tree will be rendered starting with a level 0 node counting all rows in the data set. Each resulting level will be based on the columns provided by the user in *node.levels*. Each subsequent level will carry the filters from previous parent nodes forward. Percentages will be provided for each node (compared to the level 0 count) by default and can be turned off if not desired.
+
+*tree.height* and *tree.width* values control how the tree is rendered and can be adjusted to best fit trees of various depths and widths.
 
 ```{r }
 library(muir)
@@ -45,15 +45,16 @@ mtTree
 
 
 ### More complicated example
-Instead of just returning top counts for columns provided in *node.levels*,
-provide custom filter criteria and custom node titles in *level.criteria*
+Instead of (or in combination with) just returning top counts for columns provided in *node.levels*,
+you can provide custom filter criteria and custom node titles in *level.criteria*
 (*level.criteria* could also be read in from a stored file (e.g., a crtieria.csv) as a data.frame)
 
 The **criteria** data.frame below includes the column names, operators, and associated values 
 (e.g., "cyl" <= 4), and a node title to accompany each node generated for that filter criteria. 
+
 Adding a "+" suffix after the column name in the *node.levels* parameter will add an extra 
-"Other" node that will aggregate all values node already provided in the *level.criteria* value 
-or for values below the *node.limit* provided.
+"Other" node that will aggregate all values not already provided in the *level.criteria* value 
+or for all distinct values below the *node.limit* provided.
 
 Additional label values can be provided with the *label.vals* parameter using 
 [**dplyr**](https://github.com/hadley/dplyr) summary functions. Custom labels for each value 
