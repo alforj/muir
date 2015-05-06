@@ -5,7 +5,7 @@
 \title{Explore Datasets with Trees}
 \usage{
 muir(data, node.levels, node.limit = 3, level.criteria = NULL,
-  label.vals = NULL, tree.dir = "LR", show.percent = TRUE,
+  label.vals = c("n():Count"), tree.dir = "LR", show.percent = TRUE,
   num.precision = 2, show.empty.child = FALSE, tree.height = -1,
   tree.width = -1)
 }
@@ -61,23 +61,25 @@ will include the Top "X" values based on count, where "X" = \code{node.limit}. I
 be ignored.}
 
 \item{level.criteria}{A data.frame consisting of 4 character columns containing
-column names (matching -- without suffixes -- the columns in \code{node.levels} that will
+column names (matching -- without suffixes -- those columns in \code{node.levels} that will
 use the criteria in \code{level.criteria} to determine the filters used for each node),
-an operator or boolean function (e.g., "==",">", "is.na", "is.null"), a value,
-and a corresponding node title for the node displaying that criteria.
-
-E.g.,"wt, ">=", "4000", "Heavy Cars"}
+an operator or boolean function (e.g., "==",">", "!=", "is.na"), a value (if not using a boolean function),
+and a corresponding node title for the node displaying that criteria.}
 
 \item{label.vals}{Character vector of additional values to include in the node provided as a
-character vector. The values must take the form of dplyr \code{summarise} functions
-(as characters) and include the columns the functions should be run against (e.g.,
-"min(hp)", "mean(hp)", etc.). If no custom suffix is added, the summary function itself
-will be used as the label. Similar to \code{node.levels} a custom suffix can be added
-using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP"). In this example,
-the label printed in the node will be "Avg HP:", otherwise it would be mean_hp (note
+character vector. Defaults to show "Count" (\code{n()}). The values must take the form of
+dplyr \code{summarise} functions (as characters) and includes the columns the functions
+should be run against (e.g., "min(hp)", "mean(hp)", etc.). If no custom suffix is added,
+the summary function itself will be used as the label.
+
+Similar to \code{node.levels} a
+custom suffix can be added using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP").
+In this example, the label printed in the node will be "Avg HP:", otherwise it would be "mean_hp:" (note
 that the parens "(" and ")" are removed to be rendered in HTML without error). As with
 \code{node.levels}, the column name itself cannot have a ":" and must be replaced in
-the data.frame before being passed in to \code{muir} as the \code{data} param.}
+the data.frame before being passed in to \code{muir} as the \code{data} param.
+Remember to add "n():<your label>" when providing custom \code{label.vals} to
+ensure that the node counts continue to be displayed (if desired).}
 
 \item{tree.dir}{Character. The direction the tree graph should be rendered. Defaults to "LR"
 \enumerate{
@@ -144,12 +146,12 @@ mtTree
 
 # Add additional calculations to each node output (dplyr::summarise functions)
 mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-label.vals = c("min(wt)", "max(wt)"))
+label.vals = c("n():Count", "min(wt)", "max(wt)"))
 mtTree
 
 # Make new label values more reader-friendly
 mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Instead of just returning top counts for columns provided in \\code{node.levels},
@@ -162,7 +164,7 @@ title = c("Less Than 4 Cylinders", "4 or More Cylinders", "2 Carburetors"))
 
 mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb"),
 level.criteria = criteria,
-label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Use same criteria but show all other values for the column where NOT
@@ -170,13 +172,13 @@ mtTree
 # where !(cyl < 4 | cyl >= 4) in an "Other" node
 mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
-label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Show empty child nodes (balanced tree)
 mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
-label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
+label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"),
 show.empty.child = TRUE)
 mtTree
 

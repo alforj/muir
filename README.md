@@ -45,9 +45,9 @@ mtTree <- muir(data = mtcars, node.levels = c("cyl:*", "carb:*"),
 mtTree
 ```
 
-<!--html_preserve--><div id="htmlwidget-8068" style="width:800px;height:1200px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-8068">{ "x": {
- "diagram": "graph LR;1(All<br/>n: 32<br/>%: 100.00<br/>);1-->2(cyl = 8<br/>n: 14<br/>%:  43.75<br/>);1-->3(cyl = 4<br/>n: 11<br/>%:  34.38<br/>);1-->4(cyl = 6<br/>n: 7<br/>%:  21.88<br/>);2-->5(carb = 2<br/>n: 4<br/>%:  12.50<br/>);2-->6(carb = 4<br/>n: 6<br/>%:  18.75<br/>);2-->7(carb = 1<br/>n: 0<br/>%:   0.00<br/>);3-->8(carb = 2<br/>n: 6<br/>%:  18.75<br/>);3-->9(carb = 4<br/>n: 0<br/>%:   0.00<br/>);3-->10(carb = 1<br/>n: 5<br/>%:  15.62<br/>);4-->11(carb = 2<br/>n: 0<br/>%:   0.00<br/>);4-->12(carb = 4<br/>n: 4<br/>%:  12.50<br/>);4-->13(carb = 1<br/>n: 2<br/>%:   6.25<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
+<!--html_preserve--><div id="htmlwidget-8292" style="width:800px;height:1200px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-8292">{ "x": {
+ "diagram": "graph LR;1(All<br/>Count: 32.00<br/>% of Total: 100.00<br/>);1-->2(cyl = 8<br/>Count: 14.00<br/>% of Total:  43.75<br/>);1-->3(cyl = 4<br/>Count: 11.00<br/>% of Total:  34.38<br/>);1-->4(cyl = 6<br/>Count: 7.00<br/>% of Total:  21.88<br/>);2-->5(carb = 2<br/>Count: 4.00<br/>% of Total:  12.50<br/>);2-->6(carb = 4<br/>Count: 6.00<br/>% of Total:  18.75<br/>);2-->7(carb = 1<br/>Count: NA<br/>% of Total:   0.00<br/>);3-->8(carb = 2<br/>Count: 6.00<br/>% of Total:  18.75<br/>);3-->9(carb = 4<br/>Count: NA<br/>% of Total:   0.00<br/>);3-->10(carb = 1<br/>Count: 5.00<br/>% of Total:  15.62<br/>);4-->11(carb = 2<br/>Count: NA<br/>% of Total:   0.00<br/>);4-->12(carb = 4<br/>Count: 4.00<br/>% of Total:  12.50<br/>);4-->13(carb = 1<br/>Count: 2.00<br/>% of Total:   6.25<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 
 
@@ -79,16 +79,16 @@ criteria <- data.frame(col = c("cyl", "cyl", "carb"),
 
 mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
                level.criteria = criteria,
-               label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
+               label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"),
                tree.dir = "TB",
                tree.height = 400, tree.width = 800)
 
 mtTree
 ```
 
-<!--html_preserve--><div id="htmlwidget-3718" style="width:800px;height:400px;" class="DiagrammeR"></div>
-<script type="application/json" data-for="htmlwidget-3718">{ "x": {
- "diagram": "graph TB;1(All<br/>n: 32<br/>Min Weight: 1.51<br/>Max Weight: 5.42<br/>%: 100.00<br/>);1-->2(Up to 4 Cylinders<br/>n: 11<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  34.38<br/>);1-->3(More than 4 Cylinders<br/>n: 21<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  65.62<br/>);2-->4(2 Carburetors<br/>n: 6<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>%:  18.75<br/>);2-->5(Other<br/>n: 5<br/>Min Weight: 1.84<br/>Max Weight: 2.46<br/>%:  15.62<br/>);3-->6(2 Carburetors<br/>n: 4<br/>Min Weight: 3.44<br/>Max Weight: 3.85<br/>%:  12.50<br/>);3-->7(Other<br/>n: 17<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>%:  53.12<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
+<!--html_preserve--><div id="htmlwidget-7784" style="width:800px;height:400px;" class="DiagrammeR"></div>
+<script type="application/json" data-for="htmlwidget-7784">{ "x": {
+ "diagram": "graph TB;1(All<br/>Count: 32.00<br/>Min Weight: 1.51<br/>Max Weight: 5.42<br/>% of Total: 100.00<br/>);1-->2(Up to 4 Cylinders<br/>Count: 11.00<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>% of Total:  34.38<br/>);1-->3(More than 4 Cylinders<br/>Count: 21.00<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>% of Total:  65.62<br/>);2-->4(2 Carburetors<br/>Count: 6.00<br/>Min Weight: 1.51<br/>Max Weight: 3.19<br/>% of Total:  18.75<br/>);2-->5(Other<br/>Count: 5.00<br/>Min Weight: 1.84<br/>Max Weight: 2.46<br/>% of Total:  15.62<br/>);3-->6(2 Carburetors<br/>Count: 4.00<br/>Min Weight: 3.44<br/>Max Weight: 3.85<br/>% of Total:  12.50<br/>);3-->7(Other<br/>Count: 17.00<br/>Min Weight: 2.62<br/>Max Weight: 5.42<br/>% of Total:  53.12<br/>);linkStyle default stroke-width:2px, fill:none;classDef default fill:white,stroke:#333,stroke-width:2px;classDef invisible fill:white,stroke:white,stroke-width:0px;" 
 },"evals": [  ] }</script><!--/html_preserve-->
 
 

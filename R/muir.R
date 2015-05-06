@@ -52,23 +52,24 @@
 #' \code{node.limit} is greater than the number of distinct values for the column, it will
 #' be ignored.
 #' @param level.criteria A data.frame consisting of 4 character columns containing
-#' column names (matching -- without suffixes -- the columns in \code{node.levels} that will
+#' column names (matching -- without suffixes -- those columns in \code{node.levels} that will
 #' use the criteria in \code{level.criteria} to determine the filters used for each node),
-#' an operator or boolean function (e.g., "==",">", "is.na", "is.null"), a value,
+#' an operator or boolean function (e.g., "==",">", "!=", "is.na"), a value (if not using a boolean function),
 #' and a corresponding node title for the node displaying that criteria.
-#'
-#' E.g.,"wt, ">=", "4000", "Heavy Cars"
-#'
 #' @param label.vals Character vector of additional values to include in the node provided as a
-#' character vector. The values must take the form of dplyr \code{summarise} functions
-#' (as characters) and include the columns the functions should be run against (e.g.,
-#' "min(hp)", "mean(hp)", etc.). If no custom suffix is added, the summary function itself
-#' will be used as the label. Similar to \code{node.levels} a custom suffix can be added
-#' using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP"). In this example,
-#' the label printed in the node will be "Avg HP:", otherwise it would be mean_hp (note
+#' character vector. Defaults to show "Count" (\code{n()}). The values must take the form of
+#' dplyr \code{summarise} functions (as characters) and includes the columns the functions
+#' should be run against (e.g., "min(hp)", "mean(hp)", etc.). If no custom suffix is added,
+#' the summary function itself will be used as the label.
+#'
+#' Similar to \code{node.levels} a
+#' custom suffix can be added using ":" to print a more meaningful label (e.g., "mean(hp):Avg HP").
+#' In this example, the label printed in the node will be "Avg HP:", otherwise it would be "mean_hp:" (note
 #' that the parens "(" and ")" are removed to be rendered in HTML without error). As with
 #' \code{node.levels}, the column name itself cannot have a ":" and must be replaced in
 #' the data.frame before being passed in to \code{muir} as the \code{data} param.
+#' Remember to add "n():<your label>" when providing custom \code{label.vals} to
+#' ensure that the node counts continue to be displayed (if desired).
 #' @param tree.dir Character. The direction the tree graph should be rendered. Defaults to "LR"
 #' \enumerate{
 #' \item Use "LR" for left-to-right
@@ -92,6 +93,7 @@
 #' intelligently print itself into HTML in a variety of contexts
 #' including the R console, within R Markdown documents,
 #' and within Shiny output bindings.
+#'
 #' @examples
 #' \dontrun{
 #' # Load in the 'mtcars' dataset
@@ -120,12 +122,12 @@
 #'
 #' # Add additional calculations to each node output (dplyr::summarise functions)
 #' mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-#' label.vals = c("min(wt)", "max(wt)"))
+#' label.vals = c("n():Count", "min(wt)", "max(wt)"))
 #' mtTree
 #'
 #' # Make new label values more reader-friendly
 #' mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#' label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 #' mtTree
 #'
 #' # Instead of just returning top counts for columns provided in \code{node.levels},
@@ -138,7 +140,7 @@
 #'
 #' mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb"),
 #' level.criteria = criteria,
-#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#' label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 #' mtTree
 #'
 #' # Use same criteria but show all other values for the column where NOT
@@ -146,13 +148,13 @@
 #' # where !(cyl < 4 | cyl >= 4) in an "Other" node
 #' mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 #' level.criteria = criteria,
-#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"))
+#' label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
 #' mtTree
 #'
 #' # Show empty child nodes (balanced tree)
 #' mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 #' level.criteria = criteria,
-#' label.vals = c("min(wt):Min Weight", "max(wt):Max Weight"),
+#' label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"),
 #' show.empty.child = TRUE)
 #' mtTree
 #'
@@ -170,7 +172,7 @@
 #'
 #' @rdname muir
 
-muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label.vals = NULL,
+muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label.vals = c("n():Count"),
                  tree.dir = "LR", show.percent = TRUE, num.precision = 2,
                  show.empty.child = FALSE, tree.height = -1, tree.width = -1) {
 
@@ -273,7 +275,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
       data[,node.criteria$col[i]] <- sapply(data[,node.criteria$col[i]],
                                             function(x) ifelse(x == "", NA, x))
 
-      # Getncounts for each distinct value for col[i] and arrange most to least
+      # Get counts for each distinct value for col[i] and arrange most to least
       col.values <- s_group_by(data, node.criteria$col[i])
       col.values <- dplyr::summarize(col.values, cnt = n())
       col.values <- dplyr::arrange(col.values, desc(cnt))
@@ -285,12 +287,19 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
           stop("node.limit must be a positive integer.")
         }
         # get the top n values based on the node.limit value
+        warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
+                " but the node.limit constrained the tree to only show the top ", node.limit, " values.")
         col.values <- dplyr::slice(col.values, 1:node.limit)
 
       } else {
 
         # get the top n values based on the param passed with the invidivual column
+        warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
+                " but you constrained the tree to only show the top ",
+                stringr::str_extract(node.criteria$criteria[i], "\\d+"), " values.")
+
         col.values <- dplyr::slice(col.values, 1:stringr::str_extract(node.criteria$criteria[i], "\\d+"))
+
       }
 
       col.values <- unlist(s_select(col.values, node.criteria$col[i]))
@@ -303,7 +312,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
                                                 as.character(col.values)),
                                  stringsAsFactors = FALSE)
 
-      # If crtieria is NA, change operator from "==" to "is.na"
+      # If criteria is NA, change operator from "==" to "is.na"
       new.criteria$oper[is.na(new.criteria$val)] <- "is.na"
 
       ## update/instantiate level.criteria with the node cols and values based on the top n values
@@ -336,7 +345,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   numnodes <- 1 + max(cumsum(cumprod(colcounts$cnt))) # plus 1 for level 0 node
 
   # establish initital column names
-  nodedf_cols <- c("node", "colindex", "parent", "filter", "leaf_filter", "title", "nl_n")
+  nodedf_cols <- c("node", "colindex", "parent", "filter", "leaf_filter", "title", "node_count")
 
   # If label vals are provided, add them as columns in the node df
   add.labels = NULL
@@ -392,12 +401,12 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   nodedf$filter[1] <- "None"
   nodedf$leaf_filter[1] <- "None"
   nodedf$title[1] <- "All"
-  nodedf$nl_n[1] <- as.integer(dplyr::summarise(data, n()))
+  nodedf$node_count[1] <- as.integer(dplyr::summarise(data, n()))
 
   ## Add values for additional lables if provided
   if (!is.null(add.labels)) {
     for (l in 1:length(add.labels)) {
-      if (nodedf$nl_n[1] > 0) {
+      if (nodedf$node_count[1] > 0) {
 
         nodedf[, add.labels[l]][1] <- s_summarise(data, label.vals$fun[l])[[1]]
 
@@ -423,7 +432,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
       root <- parnodes$node[pn]
       leaf_filter <- NULL
 
-      if (!show.empty.child & parnodes$nl_n[pn] == 0) {
+      if (!show.empty.child & parnodes$node_count[pn] == 0) {
 
         ## if parent node has no values, set the child leaves as NA/0
         nodedf$node[cur_node] <- cur_node
@@ -432,7 +441,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
         nodedf$filter[cur_node] <- NA
         nodedf$leaf_filter[cur_node] <- NA
         nodedf$title[cur_node] <- NA
-        nodedf$nl_n[cur_node] <- 0
+        nodedf$node_count[cur_node] <- 0
 
         if (!is.null(add.labels)) {
           for (l in 1:length(add.labels)) {
@@ -472,12 +481,12 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
           nodedf$filter[cur_node] <- cur_filter
           cur_filter_df <- s_filter(data, cur_filter)
-          nodedf$nl_n[cur_node] <- as.integer(dplyr::summarise(cur_filter_df, n()))
+          nodedf$node_count[cur_node] <- as.integer(dplyr::summarise(cur_filter_df, n()))
 
           ## Add values for additional lables if provided
           if (!is.null(add.labels)) { #
             for (l in 1:length(add.labels)) {
-              if (nodedf$nl_n[cur_node] > 0) {
+              if (nodedf$node_count[cur_node] > 0) {
 
                 nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals$fun[l])[[1]]
 
@@ -513,13 +522,13 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
           nodedf$filter[cur_node] <- cur_filter
           cur_filter_df <- s_filter(data, cur_filter)
-          nodedf$nl_n[cur_node] <- as.integer(dplyr::summarise(cur_filter_df, n()))
+          nodedf$node_count[cur_node] <- as.integer(dplyr::summarise(cur_filter_df, n()))
           nodedf$parent[cur_node] <- root
 
           ## Add values for additional lables if provided
           if (!is.null(add.labels)) {
             for (l in 1:length(add.labels)) {
-              if (nodedf$nl_n[cur_node] > 0) {
+              if (nodedf$node_count[cur_node] > 0) {
 
                 nodedf[, add.labels[l]][cur_node] <- s_summarise(cur_filter_df, label.vals$fun[l])[[1]]
 
@@ -541,15 +550,15 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
   # add percent of total n() value to the nodedf for inclusion as a node label later
   if (show.percent) {
-    nl_pct <- format(round((as.numeric(nodedf$nl_n)/as.numeric(nodedf$nl_n[1])) * 100,
+    nl_pct <- format(round((as.numeric(nodedf$node_count)/as.numeric(nodedf$node_count[1])) * 100,
                           digits = num.precision), nsmall = num.precision)
-    nodedf <- dplyr::mutate(nodedf, "nl_%" = nl_pct)
+    nodedf <- dplyr::mutate(nodedf, "nl_% of Total" = nl_pct)
   }
 
   # remove any left-over NA nodes due to parent nodes with no values and show.empty.child = TRUE
   # and format number column to include commas
   nodedf <- filter(nodedf, !is.na(node))
-  nodedf$nl_n <- formatC(nodedf$nl_n, format = "d", big.mark = ",")
+  nodedf$node_count <- formatC(nodedf$node_count, format = "d", big.mark = ",")
 
   # create htmlwidget/DiagrammeR object
   tree <- build_tree(nodedf, tree.dir, tree.height, tree.width)
