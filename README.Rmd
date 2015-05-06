@@ -72,7 +72,7 @@ criteria <- data.frame(col = c("cyl", "cyl", "carb"),
 
 mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb:+"),
                level.criteria = criteria,
-               label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"),
+               label.vals = c("n():n", "min(wt):Min Weight", "max(wt):Max Weight"),
                tree.dir = "TB",
                tree.height = 400, tree.width = 800)
 

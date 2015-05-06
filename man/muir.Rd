@@ -5,7 +5,7 @@
 \title{Explore Datasets with Trees}
 \usage{
 muir(data, node.levels, node.limit = 3, level.criteria = NULL,
-  label.vals = c("n():Count"), tree.dir = "LR", show.percent = TRUE,
+  label.vals = c("n():n"), tree.dir = "LR", show.percent = TRUE,
   num.precision = 2, show.empty.child = FALSE, tree.height = -1,
   tree.width = -1)
 }
@@ -146,12 +146,12 @@ mtTree
 
 # Add additional calculations to each node output (dplyr::summarise functions)
 mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-label.vals = c("n():Count", "min(wt)", "max(wt)"))
+label.vals = c("n():n", "min(wt)", "max(wt)"))
 mtTree
 
 # Make new label values more reader-friendly
 mtTree <- muir(data = mtcars, node.levels = c("cyl:2", "carb:2+"),
-label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():n", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Instead of just returning top counts for columns provided in \\code{node.levels},
@@ -164,7 +164,7 @@ title = c("Less Than 4 Cylinders", "4 or More Cylinders", "2 Carburetors"))
 
 mtTree <- muir(data = mtcars, node.levels = c("cyl", "carb"),
 level.criteria = criteria,
-label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():n", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Use same criteria but show all other values for the column where NOT
@@ -172,13 +172,13 @@ mtTree
 # where !(cyl < 4 | cyl >= 4) in an "Other" node
 mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
-label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"))
+label.vals = c("n():n", "min(wt):Min Weight", "max(wt):Max Weight"))
 mtTree
 
 # Show empty child nodes (balanced tree)
 mtTree <- muir(data = mtcars, node.levels = c("cyl:+", "carb:+"),
 level.criteria = criteria,
-label.vals = c("n():Count", "min(wt):Min Weight", "max(wt):Max Weight"),
+label.vals = c("n():n", "min(wt):Min Weight", "max(wt):Max Weight"),
 show.empty.child = TRUE)
 mtTree
 
