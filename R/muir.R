@@ -79,7 +79,7 @@
 #' }
 #' @param show.percent Logical. Should nodes show the percent of records represented by
 #' that node compared to the total number of records in \code{data.} Defaults to TRUE
-#' @param num.precision Number of digits to print numeric label values out to
+#' @param num.precision Number of digits to print numeric label values out to (currently only for percent)
 #' @param show.empty.child Logical. Show a balanced tree with children nodes that are all
 #' empty or stop expanding the tree once there is a parent node that is empty.
 #' Defaults to FALSE -- don't show empty children nodes
@@ -208,7 +208,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   }
 
   ## Remove factors from data so there are not filter or summarise errors later
-  ## And makse sure all NULL and "" values are coerced to NA so they can be handled consitently
+  ## And make sure all "" values are coerced to NA so they can be handled consitently
   i <- sapply(data, is.factor)
   data[i] <- lapply(data[i], as.character)
 
@@ -418,9 +418,9 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
         ## if value is numeric/double, format to decimals places = num.precision
         ## character columns/values will be coerced to 'NA'
-        nodedf[, add.labels[l]][1] <- format(round(as.numeric(nodedf[, add.labels[l]][1]),
-                                                   digits = num.precision),
-                                             nsmall = num.precision)
+#         nodedf[, add.labels[l]][1] <- format(round(as.numeric(nodedf[, add.labels[l]][1]),
+#                                                    digits = num.precision),
+#                                              nsmall = num.precision)
       }
     }
   }
@@ -498,9 +498,9 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
                 ## if value is numeric/double, format to decimals places = num.precision
                 ## character columns/values will be coerced to 'NA'
-                nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
-                                                                  digits = num.precision),
-                                                            nsmall = num.precision)
+#                 nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
+#                                                                   digits = num.precision),
+#                                                             nsmall = num.precision)
               }
             }
           }
@@ -540,9 +540,9 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
 
                 ## if value is numeric/double, format to decimals places = num.precision
                 ## character values will be coerced to 'NA'
-                nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
-                                                                  digits = num.precision),
-                                                            nsmall = num.precision)
+#                 nodedf[, add.labels[l]][cur_node] <- format(round(as.numeric(nodedf[, add.labels[l]][cur_node]),
+#                                                                   digits = num.precision),
+#                                                             nsmall = num.precision)
               }
             }
           }
@@ -562,10 +562,25 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   }
 
   # remove any left-over NA nodes due to parent nodes with no values and show.empty.child = TRUE
-  # and format number column to include commas
   nodedf <- filter(nodedf, !is.na(node))
-  nodedf$node_count <- formatC(nodedf$node_count, format = "d", big.mark = ",")
 
+  # and format number columns to include commas
+  ## This is a total hack right now to keep integers from getting arbitrary decimals. TBD Clean up later.
+  label.val.cols <- grep("^nl_", colnames(nodedf))
+  if (length(label.val.cols) > 0) {
+    for (lvc in 1:length(label.val.cols)) {
+      if(is.numeric(nodedf[,label.val.cols[lvc]])) {
+        if(!is.wholenumber(is.numeric(nodedf[,label.val.cols[lvc]]))) {
+          nodedf[,label.val.cols[lvc]] <- format(nodedf[,label.val.cols[lvc]], big.mark = ",")
+        } else {
+          nodedf[,label.val.cols[lvc]] <- format(nodedf[,label.val.cols[lvc]],
+                                                 nsmall = num.precision, big.mark = ",")
+        }
+      }
+    }
+  }
+
+  #return(nodedf)
   # create htmlwidget/DiagrammeR object
   tree <- build_tree(nodedf, tree.dir, tree.height, tree.width)
 

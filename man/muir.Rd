@@ -92,7 +92,7 @@ ensure that the node counts continue to be displayed (if desired).}
 \item{show.percent}{Logical. Should nodes show the percent of records represented by
 that node compared to the total number of records in \code{data.} Defaults to TRUE}
 
-\item{num.precision}{Number of digits to print numeric label values out to}
+\item{num.precision}{Number of digits to print numeric label values out to (currently only for percent)}
 
 \item{show.empty.child}{Logical. Show a balanced tree with children nodes that are all
 empty or stop expanding the tree once there is a parent node that is empty.
