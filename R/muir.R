@@ -287,16 +287,22 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
           stop("node.limit must be a positive integer.")
         }
         # get the top n values based on the node.limit value
-        warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
+        if(nrow(col.values) > node.limit) {
+
+          warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
                 " but the node.limit constrained the tree to only show the top ", node.limit, " values.")
+        }
         col.values <- dplyr::slice(col.values, 1:node.limit)
 
       } else {
 
         # get the top n values based on the param passed with the invidivual column
-        warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
+        if(nrow(col.values) > as.numeric(stringr::str_extract(node.criteria$criteria[i], "\\d+"))) {
+
+          warning("There were ", nrow(col.values), " distinct values for ", node.criteria$col[i],
                 " but you constrained the tree to only show the top ",
                 stringr::str_extract(node.criteria$criteria[i], "\\d+"), " values.")
+        }
 
         col.values <- dplyr::slice(col.values, 1:stringr::str_extract(node.criteria$criteria[i], "\\d+"))
 
