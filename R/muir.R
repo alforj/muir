@@ -570,7 +570,7 @@ muir <- function(data, node.levels, node.limit = 3, level.criteria = NULL, label
   if (length(label.val.cols) > 0) {
     for (lvc in 1:length(label.val.cols)) {
       if(is.numeric(nodedf[,label.val.cols[lvc]])) {
-        if(!is.wholenumber(is.numeric(nodedf[,label.val.cols[lvc]]))) {
+        if(sum(!is.wholenumber(nodedf[,label.val.cols[lvc]]), na.rm = TRUE) == 0) {
           nodedf[,label.val.cols[lvc]] <- format(nodedf[,label.val.cols[lvc]], big.mark = ",")
         } else {
           nodedf[,label.val.cols[lvc]] <- format(nodedf[,label.val.cols[lvc]],
